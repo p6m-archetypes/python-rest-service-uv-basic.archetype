@@ -10,6 +10,10 @@ from .base import (
     AbstractCreatedModifiedVersioned,
     AbstractLookupEntity,
 )
+from .pagination import (
+    PageResult,
+    PageRequest,
+)
 
 __all__ = [
     "Base",
@@ -20,4 +24,6 @@ __all__ = [
     "AbstractVersioned",
     "AbstractCreatedModifiedVersioned",
     "AbstractLookupEntity",
-] 
+    "PageResult",
+    "PageRequest",
+]

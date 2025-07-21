@@ -1,6 +1,6 @@
 """Persistence layer with SQLAlchemy async ORM."""
 
-from .config import (
+from .database_config import (
     DatabaseConfig,
     get_database_config,
     get_db_session,
@@ -20,6 +20,8 @@ from .models import (
     AbstractVersioned,
     AbstractCreatedModifiedVersioned,
     AbstractLookupEntity,
+    PageResult,
+    PageRequest,
 )
 from .repositories import (
     BaseRepository,
@@ -44,6 +46,9 @@ __all__ = [
     "AbstractVersioned",
     "AbstractCreatedModifiedVersioned",
     "AbstractLookupEntity",
+    # Pagination
+    "PageResult",
+    "PageRequest",
     # Entities
     "{{ PrefixName }}Entity",
     # Repositories

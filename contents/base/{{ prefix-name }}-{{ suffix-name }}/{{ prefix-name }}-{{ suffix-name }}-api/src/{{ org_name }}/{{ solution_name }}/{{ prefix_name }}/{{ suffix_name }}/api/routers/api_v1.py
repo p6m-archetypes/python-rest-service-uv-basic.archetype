@@ -5,26 +5,56 @@ This module provides the main API v1 endpoints for {{ PrefixName }}{{ SuffixName
 """
 
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# TODO: Import from core and persistence modules when implemented
-# from ...core.models import {{ PrefixName }}Model
-# from ...core.services import {{ PrefixName }}Service
-# from ...persistence.repositories import {{ PrefixName }}Repository
+# Import persistence layer
+from ....persistence import (
+    get_db_session,
+    {{ PrefixName }}Repository,
+    {{ PrefixName }}Entity,
+    PageRequest,
+)
 
+# Import API models
+from ..models import (
+    {{ PrefixName }}Dto,
+    Get{{ PrefixName }}Request,
+    Get{{ PrefixName }}Response,
+    Get{{ PrefixName }}sRequest, 
+    Get{{ PrefixName }}sResponse,
+    Create{{ PrefixName }}Request,
+    Create{{ PrefixName }}Response,
+    Update{{ PrefixName }}Request,
+    Update{{ PrefixName }}Response,
+    Delete{{ PrefixName }}Request,
+    Delete{{ PrefixName }}Response,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# TODO: Implement dependency injection for services
-# async def get_{{ prefix_name }}_service() -> {{ PrefixName }}Service:
-#     """Get {{ PrefixName }} service instance."""
-#     repository = {{ PrefixName }}Repository()
-#     return {{ PrefixName }}Service(repository)
+async def get_{{ prefix_name }}_repository(db: AsyncSession = Depends(get_db_session)) -> {{ PrefixName }}Repository:
+    """Get {{ PrefixName }} repository instance."""
+    return {{ PrefixName }}Repository(db)
+
+
+def entity_to_dto(entity: {{ PrefixName }}Entity) -> {{ PrefixName }}Dto:
+    """Convert {{ PrefixName }}Entity to {{ PrefixName }}Dto."""
+    return {{ PrefixName }}Dto(
+        id=str(entity.id),
+        name=entity.name,
+        description=entity.description,
+        status=entity.status,
+        created_at=entity.created_at,
+        updated_at=entity.updated_at,
+        version=entity.version
+    )
 
 
 @router.get("/", response_model=Dict[str, Any])
@@ -48,38 +78,55 @@ async def api_info() -> Dict[str, Any]:
     }
 
 
-@router.get("/{{ prefix_name | lower }}s", response_model=List[Dict[str, Any]])
+@router.get("/{{ prefix_name | lower }}s", response_model=Get{{ PrefixName }}sResponse)
 async def list_{{ prefix_name | lower }}s(
-    skip: int = Query(0, ge=0, description="Number of items to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Number of items to return"),
-    # service: {{ PrefixName }}Service = Depends(get_{{ prefix_name }}_service)
-) -> List[Dict[str, Any]]:
+    start_page: int = Query(0, ge=0, description="Starting page number (0-based)"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    search: Optional[str] = Query(None, description="Search term for name"),
+    repository: {{ PrefixName }}Repository = Depends(get_{{ prefix_name }}_repository)
+) -> Get{{ PrefixName }}sResponse:
     """
     List all {{ prefix_name | lower }}s with pagination.
     
     Args:
-        skip: Number of items to skip
-        limit: Number of items to return
-        service: {{ PrefixName }} service instance
+        start_page: Starting page number (0-based)
+        page_size: Number of items per page
+        status: Filter by status
+        search: Search term for name
+        repository: {{ PrefixName }} repository instance
         
     Returns:
-        List of {{ prefix_name | lower }}s
+        Paginated list of {{ prefix_name | lower }}s
     """
     try:
-        # TODO: Implement actual service call
-        # {{ prefix_name | lower }}s = await service.list_{{ prefix_name | lower }}s(skip=skip, limit=limit)
-        # return [{{ prefix_name | lower }}.dict() for {{ prefix_name | lower }} in {{ prefix_name | lower }}s]
+        filters = {}
+        if status:
+            filters["status"] = status
+        if search:
+            filters["name__ilike"] = f"%{search}%"
         
-        # Placeholder response
-        return [
-            {
-                "id": 1,
-                "name": "Sample {{ PrefixName }}",
-                "description": "This is a sample {{ prefix_name | lower }}",
-                "created_at": "2024-01-01T00:00:00Z",
-                "updated_at": "2024-01-01T00:00:00Z"
-            }
-        ]
+        # Get paginated results
+        page_request = PageRequest(page=start_page, size=page_size)
+        page_result = await repository.get_all(
+            offset=page_request.offset,
+            limit=page_request.size,
+            filters=filters
+        )
+        
+        # Convert entities to DTOs
+        {{ prefix_name }}_dtos = [entity_to_dto(entity) for entity in page_result.items]
+        
+        return Get{{ PrefixName }}sResponse(
+            {{ prefix_name }}s={{ prefix_name }}_dtos,
+            has_next=page_result.has_next,
+            has_previous=page_result.has_previous,
+            next_page=page_result.next_page,
+            previous_page=page_result.previous_page,
+            total_pages=page_result.total_pages,
+            total_elements=page_result.total_elements
+        )
+        
     except Exception as exc:
         logger.error(f"Error listing {{ prefix_name | lower }}s: {str(exc)}")
         raise HTTPException(
@@ -88,34 +135,34 @@ async def list_{{ prefix_name | lower }}s(
         )
 
 
-@router.post("/{{ prefix_name | lower }}s", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
+@router.post("/{{ prefix_name | lower }}s", response_model=Create{{ PrefixName }}Response, status_code=status.HTTP_201_CREATED)
 async def create_{{ prefix_name | lower }}(
-    # {{ prefix_name | lower }}_data: {{ PrefixName }}CreateRequest,
-    # service: {{ PrefixName }}Service = Depends(get_{{ prefix_name }}_service)
-) -> Dict[str, Any]:
+    {{ prefix_name | lower }}_data: Create{{ PrefixName }}Request,
+    repository: {{ PrefixName }}Repository = Depends(get_{{ prefix_name }}_repository)
+) -> Create{{ PrefixName }}Response:
     """
     Create a new {{ prefix_name | lower }}.
     
     Args:
         {{ prefix_name | lower }}_data: {{ PrefixName }} creation data
-        service: {{ PrefixName }} service instance
+        repository: {{ PrefixName }} repository instance
         
     Returns:
         Created {{ prefix_name | lower }}
     """
     try:
-        # TODO: Implement actual service call
-        # {{ prefix_name | lower }} = await service.create_{{ prefix_name | lower }}({{ prefix_name | lower }}_data)
-        # return {{ prefix_name | lower }}.dict()
-        
-        # Placeholder response
-        return {
-            "id": 1,
-            "name": "New {{ PrefixName }}",
-            "description": "This is a newly created {{ prefix_name | lower }}",
-            "created_at": "2024-01-01T00:00:00Z",
-            "updated_at": "2024-01-01T00:00:00Z"
+        # Create new entity
+        entity_data = {
+            "name": {{ prefix_name | lower }}_data.name,
+            "description": {{ prefix_name | lower }}_data.description,
+            "status": {{ prefix_name | lower }}_data.status
         }
+        
+        entity = await repository.create(entity_data)
+        {{ prefix_name }}_dto = entity_to_dto(entity)
+        
+        return Create{{ PrefixName }}Response({{ prefix_name }}={{ prefix_name }}_dto)
+        
     except ValueError as exc:
         logger.warning(f"Validation error creating {{ prefix_name | lower }}: {str(exc)}")
         raise HTTPException(
@@ -130,45 +177,41 @@ async def create_{{ prefix_name | lower }}(
         )
 
 
-@router.get("/{{ prefix_name | lower }}s/{{{ prefix_name | lower }}_id}", response_model=Dict[str, Any])
+@router.get("/{{ prefix_name | lower }}s/{{{ prefix_name | lower }}_id}", response_model=Get{{ PrefixName }}Response)
 async def get_{{ prefix_name | lower }}(
-    {{ prefix_name | lower }}_id: int,
-    # service: {{ PrefixName }}Service = Depends(get_{{ prefix_name }}_service)
-) -> Dict[str, Any]:
+    {{ prefix_name | lower }}_id: str,
+    repository: {{ PrefixName }}Repository = Depends(get_{{ prefix_name }}_repository)
+) -> Get{{ PrefixName }}Response:
     """
     Get a {{ prefix_name | lower }} by ID.
     
     Args:
-        {{ prefix_name | lower }}_id: {{ PrefixName }} ID
-        service: {{ PrefixName }} service instance
+        {{ prefix_name | lower }}_id: {{ PrefixName }} ID (UUID)
+        repository: {{ PrefixName }} repository instance
         
     Returns:
         {{ PrefixName }} details
     """
     try:
-        # TODO: Implement actual service call
-        # {{ prefix_name | lower }} = await service.get_{{ prefix_name | lower }}({{ prefix_name | lower }}_id)
-        # if not {{ prefix_name | lower }}:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_404_NOT_FOUND,
-        #         detail=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} not found"
-        #     )
-        # return {{ prefix_name | lower }}.dict()
+        # Parse UUID
+        try:
+            entity_id = UUID({{ prefix_name | lower }}_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid UUID format"
+            )
         
-        # Placeholder response
-        if {{ prefix_name | lower }}_id <= 0:
+        entity = await repository.get_by_id(entity_id)
+        if not entity:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} not found"
             )
         
-        return {
-            "id": {{ prefix_name | lower }}_id,
-            "name": f"{{ PrefixName }} {{{ prefix_name | lower }}_id}}",
-            "description": f"This is {{ prefix_name | lower }} number {{{ prefix_name | lower }}_id}}",
-            "created_at": "2024-01-01T00:00:00Z",
-            "updated_at": "2024-01-01T00:00:00Z"
-        }
+        {{ prefix_name }}_dto = entity_to_dto(entity)
+        return Get{{ PrefixName }}Response({{ prefix_name }}={{ prefix_name }}_dto)
+        
     except HTTPException:
         raise
     except Exception as exc:
@@ -179,47 +222,52 @@ async def get_{{ prefix_name | lower }}(
         )
 
 
-@router.put("/{{ prefix_name | lower }}s/{{{ prefix_name | lower }}_id}", response_model=Dict[str, Any])
+@router.put("/{{ prefix_name | lower }}s/{{{ prefix_name | lower }}_id}", response_model=Update{{ PrefixName }}Response)
 async def update_{{ prefix_name | lower }}(
-    {{ prefix_name | lower }}_id: int,
-    # {{ prefix_name | lower }}_data: {{ PrefixName }}UpdateRequest,
-    # service: {{ PrefixName }}Service = Depends(get_{{ prefix_name }}_service)
-) -> Dict[str, Any]:
+    {{ prefix_name | lower }}_id: str,
+    {{ prefix_name | lower }}_data: Update{{ PrefixName }}Request,
+    repository: {{ PrefixName }}Repository = Depends(get_{{ prefix_name }}_repository)
+) -> Update{{ PrefixName }}Response:
     """
     Update a {{ prefix_name | lower }} by ID.
     
     Args:
-        {{ prefix_name | lower }}_id: {{ PrefixName }} ID
+        {{ prefix_name | lower }}_id: {{ PrefixName }} ID (UUID)
         {{ prefix_name | lower }}_data: {{ PrefixName }} update data
-        service: {{ PrefixName }} service instance
+        repository: {{ PrefixName }} repository instance
         
     Returns:
         Updated {{ prefix_name | lower }}
     """
     try:
-        # TODO: Implement actual service call
-        # {{ prefix_name | lower }} = await service.update_{{ prefix_name | lower }}({{ prefix_name | lower }}_id, {{ prefix_name | lower }}_data)
-        # if not {{ prefix_name | lower }}:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_404_NOT_FOUND,
-        #         detail=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} not found"
-        #     )
-        # return {{ prefix_name | lower }}.dict()
+        # Parse UUID
+        try:
+            entity_id = UUID({{ prefix_name | lower }}_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid UUID format"
+            )
         
-        # Placeholder response
-        if {{ prefix_name | lower }}_id <= 0:
+        # Prepare update data (only include non-None fields)
+        update_data = {}
+        if {{ prefix_name | lower }}_data.name is not None:
+            update_data["name"] = {{ prefix_name | lower }}_data.name
+        if {{ prefix_name | lower }}_data.description is not None:
+            update_data["description"] = {{ prefix_name | lower }}_data.description
+        if {{ prefix_name | lower }}_data.status is not None:
+            update_data["status"] = {{ prefix_name | lower }}_data.status
+        
+        entity = await repository.update(entity_id, update_data)
+        if not entity:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} not found"
             )
         
-        return {
-            "id": {{ prefix_name | lower }}_id,
-            "name": f"Updated {{ PrefixName }} {{{ prefix_name | lower }}_id}}",
-            "description": f"This {{ prefix_name | lower }} has been updated",
-            "created_at": "2024-01-01T00:00:00Z",
-            "updated_at": "2024-01-01T12:00:00Z"
-        }
+        {{ prefix_name }}_dto = entity_to_dto(entity)
+        return Update{{ PrefixName }}Response({{ prefix_name }}={{ prefix_name }}_dto)
+        
     except HTTPException:
         raise
     except ValueError as exc:
@@ -236,35 +284,41 @@ async def update_{{ prefix_name | lower }}(
         )
 
 
-@router.delete("/{{ prefix_name | lower }}s/{{{ prefix_name | lower }}_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{{ prefix_name | lower }}s/{{{ prefix_name | lower }}_id}", response_model=Delete{{ PrefixName }}Response)
 async def delete_{{ prefix_name | lower }}(
-    {{ prefix_name | lower }}_id: int,
-    # service: {{ PrefixName }}Service = Depends(get_{{ prefix_name }}_service)
-):
+    {{ prefix_name | lower }}_id: str,
+    repository: {{ PrefixName }}Repository = Depends(get_{{ prefix_name }}_repository)
+) -> Delete{{ PrefixName }}Response:
     """
     Delete a {{ prefix_name | lower }} by ID.
     
     Args:
-        {{ prefix_name | lower }}_id: {{ PrefixName }} ID
-        service: {{ PrefixName }} service instance
+        {{ prefix_name | lower }}_id: {{ PrefixName }} ID (UUID)
+        repository: {{ PrefixName }} repository instance
+        
+    Returns:
+        Deletion confirmation message
     """
     try:
-        # TODO: Implement actual service call
-        # success = await service.delete_{{ prefix_name | lower }}({{ prefix_name | lower }}_id)
-        # if not success:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_404_NOT_FOUND,
-        #         detail=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} not found"
-        #     )
+        # Parse UUID
+        try:
+            entity_id = UUID({{ prefix_name | lower }}_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid UUID format"
+            )
         
-        # Placeholder validation
-        if {{ prefix_name | lower }}_id <= 0:
+        success = await repository.delete(entity_id)
+        if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} not found"
             )
         
-        # Return 204 No Content for successful deletion
+        return Delete{{ PrefixName }}Response(
+            message=f"{{ PrefixName }} with ID {{{ prefix_name | lower }}_id}} successfully deleted"
+        )
         
     except HTTPException:
         raise

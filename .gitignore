@@ -37,6 +37,7 @@ node_modules/
 .cursor
 *_FIXES*.md
 *_PRD*.md
+*_SUMMARY*.md
 
 # Task files
 # tasks.json
