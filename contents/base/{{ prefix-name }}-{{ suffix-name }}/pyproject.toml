@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}"
+version = "0.1.0"
+description = "{{ PrefixName }}{{ SuffixName }} REST API Service"
+authors = [
+    { name = "{{ author_full }}" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-api",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-core", 
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-persistence",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-client",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-server",
+]
+
+[project.optional-dependencies]
+dev = [
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-integration-tests",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+    "pre-commit>=3.5.0",
+    "black>=23.9.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/{{ org_name | slugify }}/{{ prefix_name | slugify }}-{{ suffix_name | slugify }}"
+"Source" = "https://github.com/{{ org_name | slugify }}/{{ prefix_name | slugify }}-{{ suffix_name | slugify }}"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.black]
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["{{ prefix-name }}-{{ suffix-name }}-integration-tests/tests"] 

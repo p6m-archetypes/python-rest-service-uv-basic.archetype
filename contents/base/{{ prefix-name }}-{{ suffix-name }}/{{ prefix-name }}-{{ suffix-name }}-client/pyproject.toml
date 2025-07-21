@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-client"
+version = "0.1.0"
+description = "{{ PrefixName }}{{ SuffixName }} Python Client Library"
+authors = [
+    { name = "{{ author_full }}" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.25.0",
+    "pydantic>=2.4.0",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-core",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+] 

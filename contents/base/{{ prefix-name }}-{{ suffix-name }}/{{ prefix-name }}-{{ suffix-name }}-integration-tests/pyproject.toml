@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-integration-tests"
+version = "0.1.0"
+description = "{{ PrefixName }}{{ SuffixName }} Integration Tests"
+authors = [
+    { name = "{{ author_full }}" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "testcontainers>=3.7.0",
+    "httpx>=0.25.0",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-api",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-client",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-server",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests", 
+    "e2e: marks tests as end-to-end tests",
+] 

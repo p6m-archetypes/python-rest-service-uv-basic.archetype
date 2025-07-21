@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-server"
+version = "0.1.0"
+description = "{{ PrefixName }}{{ SuffixName }} Production Server Component"
+authors = [
+    { name = "{{ author_full }}" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "uvicorn[standard]>=0.24.0",
+    "prometheus-client>=0.17.0",
+    "structlog>=23.1.0",
+    "pydantic-settings>=2.0.0",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-api",
+    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-persistence",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+]
+
+[project.scripts]
+"{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-server" = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main:main" 
