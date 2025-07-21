@@ -1,0 +1,32 @@
+# Bandit security scanner configuration
+# https://bandit.readthedocs.io/en/latest/config.html
+
+[bandit]
+# Exclude paths
+exclude_dirs = [
+    "tests",
+    "test_*.py",
+    "*_test.py",
+    "migrations",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "*.egg-info"
+]
+
+# Test IDs to skip
+skips = [
+    "B101",  # assert_used - we use asserts in tests
+    "B603",  # subprocess_without_shell_equals_true - we need shell sometimes
+]
+
+# Test severity levels
+severity = "medium"
+
+# Include test IDs (leave empty to include all)
+tests = []
+
+# Test confidence levels
+confidence = "medium" 

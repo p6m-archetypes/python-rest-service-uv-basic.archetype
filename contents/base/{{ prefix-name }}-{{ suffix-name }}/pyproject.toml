@@ -23,13 +23,34 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-integration-tests",
+    # Testing dependencies
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
+    "httpx>=0.25.0",
+    "testcontainers>=4.0.0",
+    # Code quality dependencies
     "ruff>=0.1.0",
     "mypy>=1.6.0",
-    "pre-commit>=3.5.0",
     "black>=23.9.0",
+    "pre-commit>=3.5.0",
+    # Development dependencies
+    "uvicorn[standard]>=0.24.0",
+]
+
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.25.0",
+    "testcontainers>=4.0.0",
+]
+
+lint = [
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+    "black>=23.9.0",
+    "pre-commit>=3.5.0",
 ]
 
 [project.urls]
@@ -39,14 +60,168 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+extend-exclude = [
+    "migrations/",
+    "__pycache__",
+    ".venv",
+    ".env",
+    "build/",
+    "dist/",
+    "*.egg-info/",
+]
+
+[tool.ruff.lint]
+# Enable comprehensive rule sets
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "ARG",  # flake8-unused-arguments
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+    "ERA",  # eradicate (commented-out code)
+    "PD",   # pandas-vet
+    "PGH",  # pygrep-hooks
+    "PL",   # pylint
+    "TRY",  # tryceratops
+    "FLY",  # flynt
+    "RUF",  # ruff-specific rules
+]
+
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B008",   # do not perform function calls in argument defaults
+    "TRY003", # avoid specifying long messages outside the exception class
+    "PLR0913", # too many arguments to function call
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG",     # unused function arguments in tests
+    "FBT",     # boolean trap in tests
+    "PLR2004", # magic value used in comparison
+    "S101",    # use of assert detected
+]
+
+"*/migrations/*.py" = [
+    "E501",    # line too long
+    "F401",    # imported but unused
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["{{ org_name }}", "tests"]
+force-sort-within-sections = true
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.black]
 target-version = ['py311']
 
 [tool.mypy]
 python_version = "3.11"
+# Type checking strictness
+strict = true
 warn_return_any = true
 warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+disallow_any_generics = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+strict_optional = true
+strict_equality = true
+# Import discovery
+namespace_packages = true
+explicit_package_bases = true
+# Platform configuration
+platform = "linux"
+# Error formatting
+show_error_codes = true
+show_column_numbers = true
+color_output = true
+error_summary = true
+# Exclude patterns
+exclude = [
+    "build/",
+    "dist/",
+    "migrations/",
+    "__pycache__/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "testcontainers.*",
+    "prometheus_client.*",
+    "uvicorn.*",
+    "structlog.*",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["{{ prefix-name }}-{{ suffix-name }}-integration-tests/tests"] 
+testpaths = ["{{ prefix-name }}-{{ suffix-name }}-integration-tests/tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--cov={{ org_name }}",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "e2e: marks tests as end-to-end tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["{{ org_name }}"]
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+skip_covered = false
+skip_empty = true 

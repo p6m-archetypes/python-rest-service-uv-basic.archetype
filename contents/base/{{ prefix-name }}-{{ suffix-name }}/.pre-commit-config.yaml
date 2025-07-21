@@ -1,0 +1,94 @@
+# Pre-commit configuration for {{ PrefixName }}{{ SuffixName }}
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # Pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^.*\.md$
+      - id: end-of-file-fixer
+        exclude: ^.*\.md$
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-docstring-first
+
+  # Ruff linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi, jupyter]
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
+
+  # MyPy type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.4.0
+          - fastapi>=0.104.0
+          - sqlalchemy>=2.0.0
+          - types-redis
+        exclude: ^(migrations/|tests/|docs/)
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: ["-c", ".bandit"]
+        exclude: ^tests/
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # YAML formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [yaml, markdown, json]
+        exclude: ^(.*\.md|.*\.json)$
+
+  # Check for common security issues
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(.*\.lock|.*\.log|.*\.md)$
+
+# Configuration for different stages
+default_stages: [commit]
+fail_fast: true
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [mypy]  # Skip mypy in CI (too slow, run in separate job)
+  submodules: false 
