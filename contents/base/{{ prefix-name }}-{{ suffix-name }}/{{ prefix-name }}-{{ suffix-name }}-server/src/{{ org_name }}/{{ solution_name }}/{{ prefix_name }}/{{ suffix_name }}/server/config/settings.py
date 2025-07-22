@@ -135,5 +135,10 @@ class Settings(BaseSettings):
         return self.debug or self.reload
 
 
+def get_settings() -> Settings:
+    """Get application settings instance."""
+    return Settings()
+
+
 # Global settings instance
-settings = Settings() 
+settings = get_settings() 

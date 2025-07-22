@@ -14,8 +14,9 @@ from typing import Optional
 import uvicorn
 from uvicorn.config import LOGGING_CONFIG
 
-# Import the FastAPI application from our API module
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api import create_app, Settings
+# Import the FastAPI application and settings
+from .app import create_app
+from .config.settings import get_settings, Settings
 
 
 # Configure logging
@@ -71,7 +72,7 @@ async def run_server(
     setup_logging(settings)
     
     # Create FastAPI application
-    app = create_app(settings)
+    app = create_app()
     
     logger.info(f"Starting {{ PrefixName }}{{ SuffixName }} server on {host}:{port}")
     
