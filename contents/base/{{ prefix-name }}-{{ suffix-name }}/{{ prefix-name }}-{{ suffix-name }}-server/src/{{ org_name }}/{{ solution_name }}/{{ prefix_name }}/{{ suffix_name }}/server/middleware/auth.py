@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-import jwt
+from jose import jwt
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
