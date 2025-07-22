@@ -1,0 +1,75 @@
+# Test answers file for Python REST Service Archetype validation
+# This file provides default values for automated testing and validation
+
+# Basic project information
+project: "test-validation-service"
+package_name: "test_service_rest"
+description: "Test Python REST service with UV for validation testing"
+version: "1.0.0"
+author_full: "Validation Test Suite"
+python_version: "3.11"
+
+# Service configuration
+prefix-name: "test"
+suffix-name: "service"
+service-port: 8000
+management-port: 8080
+team-name: "platform"
+
+# Organization and solution structure
+org-name: "test.example"
+solution-name: "test-python-rest-service"
+
+# Underscore versions needed by templates
+prefix_name: "test"
+suffix_name: "service"
+org_name: "test.example"
+solution_name: "test-python-rest-service"
+
+# REST-specific configuration
+cors_origins: "http://localhost:3000,http://localhost:8080"
+jwt_secret_key: "test-secret-key-for-validation-only-not-for-production"
+jwt_algorithm: "HS256"
+jwt_access_token_expire_minutes: 30
+
+# Database configuration
+database_url: "postgresql://test:test@localhost:5432/test_db"
+database_pool_size: 5
+database_max_overflow: 10
+
+# Redis configuration
+redis_url: "redis://localhost:6379"
+redis_max_connections: 10
+
+# Logging configuration
+log_level: "INFO"
+log_format: "json"
+
+# Development settings
+enable_debug: true
+enable_reload: true
+enable_cors: true
+
+# Testing configuration
+test_database_url: "sqlite:///./test.db"
+test_redis_url: "redis://localhost:6379/1"
+
+# Monitoring configuration
+enable_metrics: true
+metrics_port: 8080
+enable_tracing: false
+
+# Security settings
+enable_https: false
+ssl_cert_file: ""
+ssl_key_file: ""
+
+# Performance settings
+worker_count: 1
+max_request_size: 16777216  # 16MB
+request_timeout: 30
+
+# Feature flags
+enable_rate_limiting: false
+enable_caching: true
+enable_compression: true 
