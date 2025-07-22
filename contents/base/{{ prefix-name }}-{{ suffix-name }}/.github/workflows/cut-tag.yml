@@ -44,7 +44,7 @@ jobs:
       - name: Build Python Application
         uses: p6m-actions/python-uv-build@v1
         with:
-          modules: "{{ prefix-name }}-{{ suffix-name }}-proto {{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-client"
+          modules: "{{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-client"
           run-tests: true
           version: ${{'{'}}{ steps.cut-tag.outputs.version }}
 
@@ -67,7 +67,7 @@ jobs:
       - name: Publish to Python Repository
         uses: p6m-actions/python-uv-repository-publish@v1
         with:
-          modules: "{{ prefix-name }}-{{ suffix-name }}-proto {{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-client"
+          modules: "{{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-client"
           repository: artifactory
 
       - name: Update Application Manifest

@@ -140,17 +140,14 @@ build_packages() {
     uv sync --all-extras
     
     # Install each sub-package with dependencies  
-    for package in {{ prefix-name }}-{{ suffix-name }}-proto {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-client {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-integration-tests; do
+    for package in {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-client {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-integration-tests; do
         print_status "Installing $package dependencies..."
         cd "$package"
         uv sync --all-extras
         cd ..
     done
     
-    print_status "Building proto package..."
-    cd {{ prefix-name }}-{{ suffix-name }}-proto
-    uv run python build_proto.py
-    cd ..
+    print_status "REST API packages ready..."
     
     print_success "Package build completed"
 }
@@ -177,9 +174,9 @@ start_docker_stack() {
     for i in {1..36}; do  # 36 attempts = 3 minutes max
         print_status "Attempt $i/36: Testing service endpoints..."
         
-        # Test gRPC service health endpoint
-        if curl -s -f http://localhost:9011/health/live >/dev/null 2>&1; then
-            print_success "gRPC service is responding!"
+        # Test REST API service health endpoint
+        if curl -s -f http://localhost:8080/health >/dev/null 2>&1; then
+            print_success "REST API service is responding!"
             # Give it a few more seconds to fully stabilize
             sleep 5
             break
@@ -206,8 +203,8 @@ verify_services() {
     print_status "Final verification of services..."
     
     # Quick final check that services are still responding
-    if ! curl -s -f http://localhost:9011/health/live >/dev/null 2>&1; then
-        print_error "gRPC service health check failed"
+    if ! curl -s -f http://localhost:8080/health >/dev/null 2>&1; then
+        print_error "REST API service health check failed"
         print_status "Service logs:"
         docker logs {{ prefix-name }}-{{ suffix-name }} 2>&1 | tail -20
         return 1
@@ -228,9 +225,9 @@ run_tests() {
     cd "$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-integration-tests"
     
     # Set environment variables
-    export GRPC_SERVER_HOST=localhost
-    export GRPC_SERVER_PORT=9010
-    export MANAGEMENT_PORT=9011
+    export API_SERVER_HOST=localhost
+    export API_SERVER_PORT=8000
+    export MANAGEMENT_PORT=8080
     export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}"
     export PYTHONPATH="$PROJECT_ROOT"
     

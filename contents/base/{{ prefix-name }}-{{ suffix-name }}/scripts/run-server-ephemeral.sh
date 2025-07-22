@@ -4,7 +4,7 @@
 # This provides the same functionality as the .NET example's --ephemeral flag
 
 # Set up Python path for all modules
-export PYTHONPATH="{{ prefix-name }}-{{ suffix-name }}-server/src:{{ prefix-name }}-{{ suffix-name }}-proto/src:{{ prefix-name }}-{{ suffix-name }}-api/src:{{ prefix-name }}-{{ suffix-name }}-core/src:{{ prefix-name }}-{{ suffix-name }}-persistence/src"
+export PYTHONPATH="{{ prefix-name }}-{{ suffix-name }}-server/src:{{ prefix-name }}-{{ suffix-name }}-api/src:{{ prefix-name }}-{{ suffix-name }}-core/src:{{ prefix-name }}-{{ suffix-name }}-persistence/src"
 
 # Auto-detect Docker socket for cross-platform compatibility
 if [ -z "$DOCKER_HOST" ]; then

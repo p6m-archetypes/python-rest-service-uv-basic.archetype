@@ -1,12 +1,11 @@
 [project]
 name = "{{ prefix-name }}-{{ suffix-name }}-client"
 version = "0.1.0"
-description = "Client library for Example Service gRPC API"
+description = "Client library for Example Service REST API"
 authors = [{name = "Your Name", email = "you@example.com"}]
 requires-python = ">=3.11"
 dependencies = [
-    "grpcio==1.71.0",
-    "protobuf>=4.25.0",
+    "httpx>=0.25.0",
     "pydantic>=2.5.0",
     "structlog>=23.2.0"
 ]
@@ -16,7 +15,7 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.12.0",
-    "grpcio-testing==1.71.0",
+    "httpx>=0.25.0",
     "black>=23.12.0",
     "isort>=5.13.0",
     "mypy>=1.8.0"

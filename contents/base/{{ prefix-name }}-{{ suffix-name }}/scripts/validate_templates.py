@@ -36,35 +36,35 @@ class TemplateValidator:
         
         # Patterns to detect hardcoded references
         self.hardcoded_patterns = {
-            # Service name patterns
-            r'python-grpc01-service(?!-)': 'Service name should use {{ prefix-name }}-{{ suffix-name }}',
-            r'python-grpc01-service-([a-z-]+)': 'Package name should use {{ prefix-name }}-{{ suffix-name }}-$1',
-            r'python_grpc01_service': 'Python package should use {{ prefix_name }}_{{ suffix_name }}',
+            # Service name patterns  
+            r'python-rest01-service(?!-)': 'Service name should use {{ prefix-name }}-{{ suffix-name }}',
+            r'python-rest01-service-([a-z-]+)': 'Package name should use {{ prefix-name }}-{{ suffix-name }}-$1',
+            r'python_rest01_service': 'Python package should use {{ prefix_name }}_{{ suffix_name }}',
             
             # Database patterns (excluding template variables and false positives)
-            r'(?<!prefix_name }}_\{\{ suffix_name }})example_service(?!_core|_grpc|Service|Client|Impl)': 'Database name should use {{ prefix_name }}_{{ suffix_name }}',
+            r'(?<!prefix_name }}_\{\{ suffix_name }})example_service(?!_core|_api|Service|Client|Impl)': 'Database name should use {{ prefix_name }}_{{ suffix_name }}',
             
             # Import path patterns  
-            r'from ybor\.playground\.python_grpc01\.service': 'Import should use {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
-            r'import ybor\.playground\.python_grpc01\.service': 'Import should use {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
-            r'-m ybor\.playground\.python_grpc01\.service': 'Module path should use {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
+            r'from ybor\.playground\.python_rest01\.service': 'Import should use {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
+            r'import ybor\.playground\.python_rest01\.service': 'Import should use {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
+            r'-m ybor\.playground\.python_rest01\.service': 'Module path should use {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
             
             # Docker and container patterns
-            r'python-grpc01-service(?=:)': 'Container name should use {{ prefix-name }}-{{ suffix-name }}',
-            r'python-grpc01-service-postgres': 'Container name should use {{ prefix-name }}-{{ suffix-name }}-postgres',
-            r'python-grpc01-service-prometheus': 'Container name should use {{ prefix-name }}-{{ suffix-name }}-prometheus',
-            r'python-grpc01-service-grafana': 'Container name should use {{ prefix-name }}-{{ suffix-name }}-grafana',
+            r'python-rest01-service(?=:)': 'Container name should use {{ prefix-name }}-{{ suffix-name }}',
+            r'python-rest01-service-postgres': 'Container name should use {{ prefix-name }}-{{ suffix-name }}-postgres',
+            r'python-rest01-service-prometheus': 'Container name should use {{ prefix-name }}-{{ suffix-name }}-prometheus',
+            r'python-rest01-service-grafana': 'Container name should use {{ prefix-name }}-{{ suffix-name }}-grafana',
             
             # GitHub Actions workflow patterns
-            r'Python gRPC Service(?! Integration)': 'Workflow name should use {{ prefix-name }}-{{ suffix-name }} gRPC Service',
+            r'Python REST Service(?! Integration)': 'Workflow name should use {{ prefix-name }}-{{ suffix-name }} REST Service',
             
             # Configuration and title patterns
-            r'"Python gRPC Service"': 'Title should use "{{ prefix-name }}-{{ suffix-name }} gRPC Service"',
-            r"'Python gRPC Service'": 'Title should use "{{ prefix-name }}-{{ suffix-name }} gRPC Service"',
+            r'"Python REST Service"': 'Title should use "{{ prefix-name }}-{{ suffix-name }} REST Service"',
+            r"'Python REST Service'": 'Title should use "{{ prefix-name }}-{{ suffix-name }} REST Service"',
         }
         
         # File patterns to check
-        self.file_extensions = {'.py', '.yml', '.yaml', '.toml', '.sh', '.md', '.sql', '.json', '.proto'}
+        self.file_extensions = {'.py', '.yml', '.yaml', '.toml', '.sh', '.md', '.sql', '.json'}
         
         # Files to exclude from validation
         self.exclude_files = {
@@ -150,11 +150,11 @@ class TemplateValidator:
         
         # Generate fixes based on common patterns
         fixes = {
-            'python-grpc01-service': '{{ prefix-name }}-{{ suffix-name }}',
-            'python_grpc01_service': '{{ prefix_name }}_{{ suffix_name }}',
+            'python-rest01-service': '{{ prefix-name }}-{{ suffix-name }}',
+            'python_rest01_service': '{{ prefix_name }}_{{ suffix_name }}',
             'example_service': '{{ prefix_name }}_{{ suffix_name }}',
-            'ybor.playground.python_grpc01.service': '{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
-            'Python gRPC Service': '{{ prefix-name }}-{{ suffix-name }} gRPC Service',
+            'ybor.playground.python_rest01.service': '{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}',
+            'Python REST Service': '{{ prefix-name }}-{{ suffix-name }} REST Service',
         }
         
         for old_text, new_text in fixes.items():

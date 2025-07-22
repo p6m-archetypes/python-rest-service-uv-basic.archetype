@@ -56,37 +56,24 @@ fi
 
 echo "✅ Docker Compose is available"
 
-# Install Protocol Buffer Compiler
+# Verify curl for REST API testing
 echo ""
-echo "🔧 Setting up Protocol Buffer Compiler..."
+echo "🔧 Verifying REST API tools..."
 
-if ! command -v protoc >/dev/null 2>&1; then
-    echo "📥 Installing protoc..."
+if ! command -v curl >/dev/null 2>&1; then
+    echo "📥 Installing curl..."
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        if command -v brew >/dev/null 2>&1; then
-            brew install protobuf
-        else
-            echo "⚠️  Homebrew not found. Running manual protoc installation..."
-            ./scripts/install-protoc.sh
-        fi
+        echo "✅ curl is pre-installed on macOS"
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # Linux
         if command -v apt-get >/dev/null 2>&1; then
             sudo apt-get update
-            sudo apt-get install -y protobuf-compiler
+            sudo apt-get install -y curl
         elif command -v yum >/dev/null 2>&1; then
-            sudo yum install -y protobuf-compiler
-        else
-            echo "⚠️  Package manager not detected. Running manual protoc installation..."
-            ./scripts/install-protoc.sh
+            sudo yum install -y curl
         fi
-    else
-        echo "⚠️  OS not detected. Running manual protoc installation..."
-        ./scripts/install-protoc.sh
     fi
 else
-    echo "✅ protoc already installed: $(protoc --version)"
+    echo "✅ curl already available for REST API testing"
 fi
 
 # Set up Python virtual environments for each module
@@ -94,7 +81,6 @@ echo ""
 echo "📦 Setting up Python dependencies..."
 
 MODULES=(
-    "{{ prefix-name }}-{{ suffix-name }}-proto"
     "{{ prefix-name }}-{{ suffix-name }}-api" 
     "{{ prefix-name }}-{{ suffix-name }}-core"
     "{{ prefix-name }}-{{ suffix-name }}-persistence"
@@ -125,16 +111,10 @@ for module in "${MODULES[@]}"; do
     fi
 done
 
-# Generate gRPC code
+# REST API setup complete
 echo ""
-echo "🔄 Generating gRPC code..."
-if [[ -f "scripts/generate-grpc.sh" ]]; then
-    ./scripts/generate-grpc.sh
-else
-    cd {{ prefix-name }}-{{ suffix-name }}-proto
-    poetry run python build_proto.py
-    cd ..
-fi
+echo "🔄 REST API setup complete..."
+echo "✅ All packages are ready for REST API development"
 
 # Set up pre-commit hooks
 echo ""
@@ -161,13 +141,14 @@ if [[ ! -f ".env.local" ]]; then
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}
 DATABASE_ECHO=false
 
-# gRPC Server
-GRPC_PORT=9010
-GRPC_REFLECTION_ENABLED=true
-GRPC_MAX_WORKERS=10
+# REST API Server
+API_PORT=8000
+API_HOST=0.0.0.0
+API_CORS_ENABLED=true
+API_DOCS_ENABLED=true
 
 # Management Server  
-MANAGEMENT_PORT=9011
+MANAGEMENT_PORT=8080
 MANAGEMENT_ENABLED=true
 
 # Logging
@@ -198,12 +179,12 @@ echo "   Testing Python imports..."
 cd {{ prefix-name }}-{{ suffix-name }}-integration-tests
 if poetry run python -c "
 import sys
-sys.path.insert(0, '../{{ prefix-name }}-{{ suffix-name }}-proto/src')
+sys.path.insert(0, '../{{ prefix-name }}-{{ suffix-name }}-api/src')
 try:
-    import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ prefix_name }}_{{ suffix_name }}_pb2 as pb2
-    print('✅ gRPC imports work')
+    import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models
+    print('✅ REST API imports work')
 except ImportError as e:
-    print(f'❌ gRPC import failed: {e}')
+    print(f'❌ REST API import failed: {e}')
     sys.exit(1)
 " 2>/dev/null; then
     echo "   ✅ Import test passed"
@@ -226,21 +207,21 @@ echo "🎉 Development environment setup completed!"
 echo ""
 echo "📋 Summary:"
 echo "   ✅ Python 3.11+ installed"
-echo "   ✅ Poetry installed and configured"
+echo "   ✅ UV package manager configured"
 echo "   ✅ Docker and Docker Compose available"
-echo "   ✅ Protocol Buffer Compiler installed"
 echo "   ✅ All module dependencies installed"
-echo "   ✅ gRPC code generated"
+echo "   ✅ REST API modules ready"
 echo "   ✅ Development configuration created"
 echo ""
 echo "🚀 Next steps:"
 echo "   1. Copy .env.local to .env and customize settings"
 echo "   2. Start development environment: ./scripts/start-dev.sh"
 echo "   3. Run tests: ./scripts/run-tests.sh"
-echo "   4. Check service health: curl http://localhost:9011/health"
+echo "   4. Check service health: curl http://localhost:8080/health"
+echo "   5. Access API docs: http://localhost:8000/docs"
 echo ""
 echo "💡 Useful commands:"
 echo "   ./scripts/start-dev.sh      - Start all services"
 echo "   ./scripts/run-tests.sh      - Run all tests"
-echo "   ./scripts/generate-grpc.sh  - Regenerate gRPC code"
+echo "   ./scripts/benchmark.py      - Run REST API benchmarks"
 echo "   docker-compose logs -f      - View service logs"

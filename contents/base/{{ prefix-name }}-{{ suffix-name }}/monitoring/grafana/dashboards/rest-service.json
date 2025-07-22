@@ -13,7 +13,7 @@
       "targets": [
         {
           "expr": "rate(http_requests_total[5m])",
-          "legendFormat": "{{method}} {{handler}}"
+          "legendFormat": "{{'{'}}{method}} {{'{'}}{handler}}"
         }
       ]
     },
@@ -37,7 +37,7 @@
       "targets": [
         {
           "expr": "rate(http_requests_total[5m])",
-          "legendFormat": "{{status_code}}"
+          "legendFormat": "{{'{'}}{status_code}}"
         }
       ]
     },

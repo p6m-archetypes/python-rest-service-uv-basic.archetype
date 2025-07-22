@@ -150,43 +150,63 @@ validate_template_substitution() {
     
     cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
-    # Check for common template issues in REST archetype
+    # Track validation issues
     local template_issues=0
+    local error_details=""
     
     # Check for unreplaced template variables
-    if grep -r "{{ prefix" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null; then
-        log "${RED}Found unreplaced prefix template variables${NC}"
+    local unreplaced=$(grep -r "{{ prefix\|{{ suffix\|{{ org" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null | wc -l)
+    if [ "$unreplaced" -gt 0 ]; then
+        log "${RED}Found $unreplaced unreplaced template variables:${NC}"
+        grep -r "{{ prefix\|{{ suffix\|{{ org" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null | head -5
+        if [ "$unreplaced" -gt 5 ]; then
+            log "${YELLOW}... and $((unreplaced - 5)) more${NC}"
+        fi
         template_issues=1
+        error_details="${error_details}- Unreplaced template variables ($unreplaced found)\n"
     fi
     
-    if grep -r "{{ suffix" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null; then
-        log "${RED}Found unreplaced suffix template variables${NC}"
+    # Check for gRPC references that should have been replaced (excluding lock files which get regenerated)
+    local grpc_refs=$(grep -r "grpc" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv --exclude="uv.lock" 2>/dev/null | grep -v "# REST replaces gRPC" | wc -l)
+    if [ "$grpc_refs" -gt 0 ]; then
+        log "${RED}Found $grpc_refs unexpected gRPC references (excluding lock files):${NC}"
+        grep -r "grpc" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv --exclude="uv.lock" 2>/dev/null | grep -v "# REST replaces gRPC" | head -3
+        if [ "$grpc_refs" -gt 3 ]; then
+            log "${YELLOW}... and $((grpc_refs - 3)) more${NC}"
+        fi
         template_issues=1
+        error_details="${error_details}- gRPC references still present ($grpc_refs found, excluding lock files)\n"
     fi
     
-    if grep -r "{{ org" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null; then
-        log "${RED}Found unreplaced org template variables${NC}"
+    # Check for proto references that should have been replaced (excluding lock files which get regenerated)
+    local proto_refs=$(grep -r "proto" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv --exclude="uv.lock" 2>/dev/null | grep -v "# proto files not needed" | wc -l)
+    if [ "$proto_refs" -gt 0 ]; then
+        log "${RED}Found $proto_refs unexpected proto references (excluding lock files):${NC}"
+        grep -r "proto" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv --exclude="uv.lock" 2>/dev/null | grep -v "# proto files not needed" | head -3
+        if [ "$proto_refs" -gt 3 ]; then
+            log "${YELLOW}... and $((proto_refs - 3)) more${NC}"
+        fi
         template_issues=1
-    fi
-    
-    # Check for gRPC references that should have been replaced
-    if grep -r "grpc" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv 2>/dev/null | grep -v "# REST replaces gRPC"; then
-        log "${RED}Found unexpected gRPC references${NC}"
-        template_issues=1
-    fi
-    
-    if grep -r "proto" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv 2>/dev/null | grep -v "# proto files not needed"; then
-        log "${RED}Found unexpected proto references${NC}"
-        template_issues=1
+        error_details="${error_details}- Proto references still present ($proto_refs found, excluding lock files)\n"
     fi
     
     # Check for proper REST endpoint patterns
-    if ! grep -r "/api/v1/" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null; then
+    local rest_endpoints=$(grep -r "/api/v1/" . --exclude-dir=.git --exclude="*.pyc" 2>/dev/null | wc -l)
+    if [ "$rest_endpoints" -eq 0 ]; then
         log "${RED}Missing expected REST API endpoint patterns${NC}"
         template_issues=1
+        error_details="${error_details}- No REST API endpoints found\n"
     fi
     
-    test_result $template_issues "Template validation passed - no template issues found"
+    # Report results with proper logic (0 = success, 1 = failure)
+    if [ $template_issues -eq 0 ]; then
+        test_result 0 "Template validation passed - archetype generated correctly"
+    else
+        log "${RED}Template validation issues found:${NC}"
+        log -e "${error_details}"
+        test_result 1 "Template validation failed - archetype needs fixes before use"
+        return 1
+    fi
 }
 
 # Test UV sync on all packages

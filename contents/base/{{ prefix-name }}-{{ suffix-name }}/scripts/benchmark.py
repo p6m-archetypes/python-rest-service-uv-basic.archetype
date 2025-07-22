@@ -1,4 +1,4 @@
-"""Performance benchmarking script for the Example Service gRPC API."""
+"""Performance benchmarking script for the Example Service REST API."""
 
 import asyncio
 import statistics
@@ -7,12 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import List, Optional
 
-import grpc
+import httpx
 import click
-from {{ prefix_name }}_{{ suffix_name }}_proto.src.{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc import (
-    {{ prefix_name }}_{{ suffix_name }}_pb2,
-    {{ prefix_name }}_{{ suffix_name }}_pb2_grpc,
-)
 
 
 @dataclass
@@ -33,44 +29,46 @@ class BenchmarkResult:
     max_latency_ms: float
 
 
-class GrpcBenchmark:
-    """gRPC service benchmark runner."""
+class RestBenchmark:
+    """REST API service benchmark runner."""
     
-    def __init__(self, server_address: str = "localhost:9010"):
+    def __init__(self, server_address: str = "http://localhost:8080"):
         self.server_address = server_address
-        self.channel = None
-        self.stub = None
+        self.client = None
     
     async def setup(self) -> None:
-        """Set up gRPC connection."""
-        self.channel = grpc.aio.insecure_channel(self.server_address)
-        self.stub = {{ prefix_name }}_{{ suffix_name }}_pb2_grpc.{{ PrefixName }}{{ SuffixName }}Stub(self.channel)
+        """Set up HTTP client."""
+        self.client = httpx.AsyncClient(base_url=self.server_address, timeout=30.0)
         
-        # Wait for connection
-        await grpc.aio.channel_ready_future(self.channel)
-        click.echo(f"Connected to gRPC server at {self.server_address}")
+        # Test connection
+        try:
+            response = await self.client.get("/health")
+            if response.status_code == 200:
+                click.echo(f"Connected to REST API server at {self.server_address}")
+            else:
+                click.echo(f"Warning: Health check returned {response.status_code}")
+        except Exception as e:
+            click.echo(f"Warning: Could not connect to server: {e}")
     
     async def teardown(self) -> None:
-        """Clean up gRPC connection."""
-        if self.channel:
-            await self.channel.close()
+        """Clean up HTTP client."""
+        if self.client:
+            await self.client.aclose()
     
     async def create_example_request(self, index: int) -> tuple[float, bool]:
         """Make a single CreateExample request and measure latency."""
         start_time = time.perf_counter()
         
         try:
-            request = {{ prefix_name }}_{{ suffix_name }}_pb2.Create{{ PrefixName }}Request(
-                {{ prefix_name }}={{ prefix_name }}_{{ suffix_name }}_pb2.{{ PrefixName }}(
-                    name=f"benchmark-{{ prefix-name }}-{index}",
-                    description=f"Benchmark test {{ prefix-name }} {index}"
-                )
-            )
+            payload = {
+                "name": f"benchmark-{{ prefix-name }}-{index}",
+                "description": f"Benchmark test {{ prefix-name }} {index}"
+            }
             
-            response = await self.stub.Create{{ PrefixName }}(request)
+            response = await self.client.post("/api/v1/{{ prefix_name }}s", json=payload)
             end_time = time.perf_counter()
             
-            return (end_time - start_time) * 1000, True  # Convert to milliseconds
+            return (end_time - start_time) * 1000, response.status_code < 400  # Convert to milliseconds
             
         except Exception as e:
             end_time = time.perf_counter()
@@ -82,11 +80,10 @@ class GrpcBenchmark:
         start_time = time.perf_counter()
         
         try:
-            request = {{ prefix_name }}_{{ suffix_name }}_pb2.Get{{ PrefixName }}Request(id=example_id)
-            response = await self.stub.Get{{ PrefixName }}(request)
+            response = await self.client.get(f"/api/v1/{{ prefix_name }}s/{example_id}")
             end_time = time.perf_counter()
             
-            return (end_time - start_time) * 1000, True
+            return (end_time - start_time) * 1000, response.status_code < 400
             
         except Exception as e:
             end_time = time.perf_counter()
@@ -97,14 +94,14 @@ class GrpcBenchmark:
         start_time = time.perf_counter()
         
         try:
-            request = {{ prefix_name }}_{{ suffix_name }}_pb2.Get{{ PrefixName }}sRequest(
-                page_size=50,
-                start_page=0
-            )
-            response = await self.stub.Get{{ PrefixName }}s(request)
+            params = {
+                "page_size": 50,
+                "start_page": 0
+            }
+            response = await self.client.get("/api/v1/{{ prefix_name }}s", params=params)
             end_time = time.perf_counter()
             
-            return (end_time - start_time) * 1000, True
+            return (end_time - start_time) * 1000, response.status_code < 400
             
         except Exception as e:
             end_time = time.perf_counter()
@@ -198,12 +195,12 @@ def print_benchmark_result(result: BenchmarkResult) -> None:
 
 @click.group()
 def cli():
-    """gRPC service performance benchmarking tools."""
+    """REST API service performance benchmarking tools."""
     pass
 
 
 @cli.command()
-@click.option("--server", "-s", default="localhost:9010", help="gRPC server address")
+@click.option("--server", "-s", default="http://localhost:8080", help="REST API server address")
 @click.option("--requests", "-n", default=1000, help="Total number of requests")
 @click.option("--concurrency", "-c", default=10, help="Number of concurrent requests")
 @click.option("--operation", "-o", 
@@ -211,10 +208,10 @@ def cli():
               default="all", 
               help="Operation to benchmark")
 def benchmark(server: str, requests: int, concurrency: int, operation: str):
-    """Run performance benchmark against the gRPC service."""
+    """Run performance benchmark against the REST API service."""
     
     async def run_benchmarks():
-        benchmark_runner = GrpcBenchmark(server)
+        benchmark_runner = RestBenchmark(server)
         
         try:
             await benchmark_runner.setup()
@@ -248,14 +245,14 @@ def benchmark(server: str, requests: int, concurrency: int, operation: str):
 
 
 @cli.command()
-@click.option("--server", "-s", default="localhost:9010", help="gRPC server address")
+@click.option("--server", "-s", default="http://localhost:8080", help="REST API server address")
 @click.option("--duration", "-d", default=30, help="Test duration in seconds")
 @click.option("--concurrency", "-c", default=10, help="Number of concurrent requests")
 def load_test(server: str, duration: int, concurrency: int):
     """Run a continuous load test for the specified duration."""
     
     async def run_load_test():
-        benchmark_runner = GrpcBenchmark(server)
+        benchmark_runner = RestBenchmark(server)
         
         try:
             await benchmark_runner.setup()
