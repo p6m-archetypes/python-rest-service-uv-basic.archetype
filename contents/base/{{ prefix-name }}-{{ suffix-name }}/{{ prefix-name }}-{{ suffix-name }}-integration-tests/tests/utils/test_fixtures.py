@@ -11,7 +11,7 @@ from testcontainers.postgres import PostgresContainer
 # Real imports for integration testing
 from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.database_config import DatabaseConfig
 from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.{{ prefix_name }}_repository import {{ PrefixName }}Repository  
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.example_service_core import ExampleServiceCore
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.{{ prefix_name }}_service_core import {{ PrefixName }}ServiceCore
 from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
     ExampleDto,
     CreateExampleResponse,
@@ -79,9 +79,9 @@ async def example_repository(db_session):
 @pytest_asyncio.fixture
 @pytest.mark.requires_docker
 async def example_service_core(example_repository):
-    """Create a real ExampleServiceCore for testing."""
+    """Create a real {{ PrefixName }}ServiceCore for testing."""
     # Create a real integration service that implements the expected interface
-    class RealExampleServiceCore:
+    class Real{{ PrefixName }}ServiceCore:
         """Real service implementation for integration testing."""
         
         def __init__(self, repository):
@@ -165,7 +165,7 @@ async def example_service_core(example_repository):
             del self._storage[request.id]
             return DeleteExampleResponse(message="Successfully deleted example")
     
-    return RealExampleServiceCore(example_repository)
+    return Real{{ PrefixName }}ServiceCore(example_repository)
 
 
 @pytest.fixture

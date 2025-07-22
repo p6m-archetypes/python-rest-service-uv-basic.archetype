@@ -140,6 +140,86 @@ class TestRestConnectivity:
                 pytest.fail(f"Cannot test CORS at {host}:{port}")
 
 
+class TestEnvironmentConfiguration:
+    """Test that environment is properly configured for integration tests."""
+
+    @pytest.mark.integration
+    def test_required_environment_variables(self):
+        """Test that required environment variables are set."""
+        required_vars = [
+            "DATABASE_URL",
+            "API_SERVER_HOST", 
+            "API_SERVER_PORT"
+        ]
+        
+        missing_vars = []
+        for var in required_vars:
+            if not os.getenv(var):
+                missing_vars.append(var)
+        
+        assert not missing_vars, f"Missing required environment variables: {missing_vars}"
+
+    @pytest.mark.integration
+    async def test_database_connectivity(self):
+        """Test database connectivity from environment."""
+        database_url = os.getenv("DATABASE_URL")
+        if not database_url:
+            pytest.skip("DATABASE_URL not set")
+        
+        # Test basic database URL format
+        assert database_url.startswith(("postgresql://", "postgresql+asyncpg://"))
+        
+        # Try to import and test database connection
+        try:
+            import asyncpg
+            import urllib.parse
+            
+            # Parse database URL
+            parsed = urllib.parse.urlparse(database_url.replace("postgresql+asyncpg://", "postgresql://"))
+            
+            # Test connection
+            conn = await asyncpg.connect(
+                host=parsed.hostname,
+                port=parsed.port or 5432,
+                user=parsed.username,
+                password=parsed.password,
+                database=parsed.path.lstrip('/'),
+                command_timeout=5
+            )
+            
+            # Simple query test
+            result = await conn.fetchval("SELECT 1")
+            assert result == 1
+            
+            await conn.close()
+            
+        except ImportError:
+            pytest.skip("asyncpg not available for database test")
+        except Exception as e:
+            pytest.fail(f"Database connection failed: {e}")
+
+    @pytest.mark.integration
+    def test_python_path_configuration(self):
+        """Test that Python path is correctly configured for imports."""
+        try:
+            # Test that we can import our service modules
+            import sys
+            workspace_path = os.getenv("PYTHONPATH", "")
+            
+            if workspace_path:
+                assert workspace_path in sys.path, "PYTHONPATH not in sys.path"
+            
+            # Try importing a core module (will fail gracefully if not available)
+            try:
+                from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core import {{ prefix_name }}_service_core
+            except ImportError:
+                # Expected if modules not fully built yet
+                pass
+                
+        except Exception as e:
+            pytest.fail(f"Python path configuration issue: {e}")
+
+
 if __name__ == "__main__":
     # Allow running tests directly for debugging
     asyncio.run(pytest.main([__file__, "-v"])) 

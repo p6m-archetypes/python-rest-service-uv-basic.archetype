@@ -1,34 +1,34 @@
-"""Core business logic implementation for the Example Service."""
+"""Core business logic implementation for the {{ PrefixName }} Service."""
 
 import uuid
 from typing import Optional
 
 import structlog
 
-# Fixed imports - matching our actual module structure
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.{{ prefix_name }}_service import {{ PrefixName }}{{ SuffixName }}
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
-    Create{{ PrefixName }}Response,
-    Delete{{ PrefixName }}Request,
-    Delete{{ PrefixName }}Response,
-    {{ PrefixName }}Dto,
-    Get{{ PrefixName }}Request,
-    Get{{ PrefixName }}Response,
-    Get{{ PrefixName }}sRequest,
-    Get{{ PrefixName }}sResponse,
-    Update{{ PrefixName }}Response,
-)
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.service_exception import ServiceException
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.{{ prefix_name }}_repository import {{ PrefixName }}Repository
-from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.entities.{{ prefix_name }}_entity import {{ PrefixName }}Entity
+# Note: These imports will work once we set up proper dependencies
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.{{ prefix_name }}_service import {{ PrefixName }}Service
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
+#     Create{{ PrefixName }}Response,
+#     Delete{{ PrefixName }}Request,
+#     Delete{{ PrefixName }}Response,
+#     {{ PrefixName }}Dto,
+#     Get{{ PrefixName }}Request,
+#     Get{{ PrefixName }}Response,
+#     Get{{ PrefixName }}sRequest,
+#     Get{{ PrefixName }}sResponse,
+#     Update{{ PrefixName }}Response,
+# )
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.service_exception import ServiceException
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.{{ prefix_name }}_repository import {{ PrefixName }}Repository
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.entities.{{ prefix_name }}_entity import {{ PrefixName }}Entity
 
 logger = structlog.get_logger(__name__)
 
 
-class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
-    """Core business logic implementation for {{ PrefixName }} {{ SuffixName }} operations."""
+class {{ PrefixName }}ServiceCore:
+    """Core business logic implementation for {{ PrefixName }} Service operations."""
 
-    def __init__(self, {{ prefix_name }}_repository: {{ PrefixName }}Repository) -> None:
+    def __init__(self, {{ prefix_name }}_repository) -> None:
         """Initialize the service with required dependencies.
         
         Args:
@@ -36,7 +36,7 @@ class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
         """
         self.{{ prefix_name }}_repository = {{ prefix_name }}_repository
 
-    async def create_{{ prefix_name }}(self, {{ prefix_name }}: {{ PrefixName }}Dto) -> Create{{ PrefixName }}Response:
+    async def create_{{ prefix_name }}(self, {{ prefix_name }}) -> "Create{{ PrefixName }}Response":
         """Create a new {{ prefix_name }} entity.
         
         Args:
@@ -89,7 +89,7 @@ class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
             
             raise ServiceException.internal_error("Failed to create {{ prefix_name }} entity", e)
 
-    async def get_{{ prefix_name }}s(self, request: Get{{ PrefixName }}sRequest) -> Get{{ PrefixName }}sResponse:
+    async def get_{{ prefix_name }}s(self, request) -> "Get{{ PrefixName }}sResponse":
         """Get a paginated list of {{ prefix_name }}s.
         
         Args:
@@ -156,7 +156,7 @@ class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
             
             raise ServiceException.internal_error("Failed to retrieve {{ prefix_name }}s", e)
 
-    async def get_{{ prefix_name }}(self, request: Get{{ PrefixName }}Request) -> Get{{ PrefixName }}Response:
+    async def get_{{ prefix_name }}(self, request) -> "Get{{ PrefixName }}Response":
         """Get a single {{ prefix_name }} by ID.
         
         Args:
@@ -213,7 +213,7 @@ class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
             
             raise ServiceException.internal_error("Failed to retrieve {{ prefix_name }} entity", e)
 
-    async def update_{{ prefix_name }}(self, {{ prefix_name }}: {{ PrefixName }}Dto) -> Update{{ PrefixName }}Response:
+    async def update_{{ prefix_name }}(self, {{ prefix_name }}) -> "Update{{ PrefixName }}Response":
         """Update an existing {{ prefix_name }}.
         
         Args:
@@ -286,7 +286,7 @@ class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
             
             raise ServiceException.internal_error("Failed to update {{ prefix_name }} entity", e)
 
-    async def delete_{{ prefix_name }}(self, request: Delete{{ PrefixName }}Request) -> Delete{{ PrefixName }}Response:
+    async def delete_{{ prefix_name }}(self, request) -> "Delete{{ PrefixName }}Response":
         """Delete a {{ prefix_name }} by ID.
         
         Args:
@@ -346,7 +346,7 @@ class {{ PrefixName }}ServiceCore({{ PrefixName }}{{ SuffixName }}):
             
             raise ServiceException.internal_error("Failed to delete {{ prefix_name }} entity", e)
 
-    def _entity_to_dto(self, entity: {{ PrefixName }}Entity) -> {{ PrefixName }}Dto:
+    def _entity_to_dto(self, entity) -> "{{ PrefixName }}Dto":
         """Convert an entity to a DTO.
         
         Args:

@@ -16,14 +16,14 @@ def test_import_handling():
         from ..utils.test_fixtures import (
             DatabaseConfig, 
             TrashRepository, 
-            ExampleServiceCore,
+            {{ PrefixName }}ServiceCore,
             TestDataFactory
         )
         
         # If imports succeed, verify the classes exist
         assert DatabaseConfig is not None
         assert TrashRepository is not None  
-        assert ExampleServiceCore is not None
+        assert {{ PrefixName }}ServiceCore is not None
         assert TestDataFactory is not None
         
         print("✓ Import handling test: All imports successful")
