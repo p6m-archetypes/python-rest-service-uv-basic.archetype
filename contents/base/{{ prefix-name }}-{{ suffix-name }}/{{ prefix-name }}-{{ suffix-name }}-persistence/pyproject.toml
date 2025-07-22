@@ -9,7 +9,7 @@ description = "{{ PrefixName }}{{ SuffixName }} Data Persistence Component"
 authors = [
     { name = "{{ author_full }}" }
 ]
-readme = "README.md"
+
 license = { text = "MIT" }
 requires-python = ">=3.11"
 dependencies = [
@@ -44,3 +44,9 @@ lint = [
     "ruff>=0.1.0",
     "mypy>=1.6.0",
 ] 
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ org_name }}"]
+
+[tool.uv.sources]
+{{ prefix-name }}-{{ suffix-name }}-core = { path = "../{{ prefix-name }}-{{ suffix-name }}-core", editable = true }

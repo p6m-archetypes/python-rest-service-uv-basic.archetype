@@ -9,7 +9,7 @@ description = "{{ PrefixName }}{{ SuffixName }} Production Server Component"
 authors = [
     { name = "{{ author_full }}" }
 ]
-readme = "README.md"
+
 license = { text = "MIT" }
 requires-python = ">=3.11"
 dependencies = [
@@ -30,5 +30,12 @@ dev = [
     "mypy>=1.6.0",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ org_name }}"]
+
 [project.scripts]
 "{{ prefix-name }}-{{ suffix-name }}-server" = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main:main" 
+
+[tool.uv.sources]
+{{ prefix-name }}-{{ suffix-name }}-api = { path = "../{{ prefix-name }}-{{ suffix-name }}-api", editable = true }
+{{ prefix-name }}-{{ suffix-name }}-persistence = { path = "../{{ prefix-name }}-{{ suffix-name }}-persistence", editable = true }
