@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-api"
+name = "{{ prefix-name }}-{{ suffix-name }}-api"
 version = "0.1.0"
 description = "{{ PrefixName }}{{ SuffixName }} REST API Component"
 authors = [
@@ -21,7 +21,7 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "python-multipart>=0.0.6",
     "httpx>=0.25.0",
-    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-core",
+    "{{ prefix-name }}-{{ suffix-name }}-core",
 ]
 
 [project.optional-dependencies]

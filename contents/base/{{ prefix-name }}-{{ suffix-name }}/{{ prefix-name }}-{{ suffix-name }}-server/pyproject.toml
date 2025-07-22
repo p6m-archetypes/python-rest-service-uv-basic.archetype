@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-server"
+name = "{{ prefix-name }}-{{ suffix-name }}-server"
 version = "0.1.0"
 description = "{{ PrefixName }}{{ SuffixName }} Production Server Component"
 authors = [
@@ -17,8 +17,8 @@ dependencies = [
     "prometheus-client>=0.17.0",
     "structlog>=23.1.0",
     "pydantic-settings>=2.0.0",
-    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-api",
-    "{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-persistence",
+    "{{ prefix-name }}-{{ suffix-name }}-api",
+    "{{ prefix-name }}-{{ suffix-name }}-persistence",
 ]
 
 [project.optional-dependencies]
@@ -31,4 +31,4 @@ dev = [
 ]
 
 [project.scripts]
-"{{ prefix_name | slugify }}-{{ suffix_name | slugify }}-server" = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main:main" 
+"{{ prefix-name }}-{{ suffix-name }}-server" = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main:main" 
