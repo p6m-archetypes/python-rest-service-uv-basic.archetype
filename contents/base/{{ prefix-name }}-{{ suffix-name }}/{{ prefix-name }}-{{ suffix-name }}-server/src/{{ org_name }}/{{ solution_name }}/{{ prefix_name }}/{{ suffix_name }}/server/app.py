@@ -17,6 +17,25 @@ from pydantic import ValidationError
 from .config.settings import get_settings
 from .middleware.auth import get_auth_service
 
+# Core service imports
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.{{ prefix_name }}_service_core import {{ PrefixName }}ServiceCore
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
+    {{ PrefixName }}Dto,
+    Create{{ PrefixName }}Response,
+    Get{{ PrefixName }}Request,
+    Get{{ PrefixName }}Response,
+    Get{{ PrefixName }}sRequest,
+    Get{{ PrefixName }}sResponse,
+    Update{{ PrefixName }}Response,
+    Delete{{ PrefixName }}Request,
+    Delete{{ PrefixName }}Response,
+)
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.service_exception import ServiceException
+
+# Persistence imports for dependency injection
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.database_config import DatabaseConfig
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.{{ prefix_name }}_repository import {{ PrefixName }}Repository
+
 logger = logging.getLogger(__name__)
 
 
