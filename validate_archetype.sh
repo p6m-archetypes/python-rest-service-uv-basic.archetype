@@ -103,11 +103,11 @@ generate_test_service() {
     cd "$TEMP_DIR"
     
     # Copy the test answers file from the archetype
-    if [ -f "$SCRIPT_DIR/test_answers.yaml" ]; then
-        cp "$SCRIPT_DIR/test_answers.yaml" ./test_answers.yaml
+    if [ -f "$SCRIPT_DIR/test_answers_complete.yaml" ]; then
+        cp "$SCRIPT_DIR/test_answers_complete.yaml" ./test_answers.yaml
         test_result 0 "Test answers file copied successfully"
     else
-        log "${RED}Test answers file not found at $SCRIPT_DIR/test_answers.yaml${NC}"
+        log "${RED}Test answers file not found at $SCRIPT_DIR/test_answers_complete.yaml${NC}"
         # Create minimal answers file as fallback
         cat > test_answers.yaml << EOF
 # Fallback answer file for archetype validation testing
