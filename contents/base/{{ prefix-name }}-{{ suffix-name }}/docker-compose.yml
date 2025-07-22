@@ -8,25 +8,24 @@ services:
       target: production
     container_name: "{{ prefix-name }}-{{ suffix-name }}"
     ports:
-      - "8000:8000"  # REST API port
-      - "8001:8080"  # Management HTTP port
+      - "8000:8000"  # FastAPI REST port
+      - "8080:8080"  # Management HTTP port
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/{{ prefix_name }}_{{ suffix_name }}
       - LOGGING_LEVEL=INFO
       - LOGGING_FORMAT=json
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
       - MANAGEMENT_ENABLED=true
       - METRICS_ENABLED=true
       - METRICS_PROMETHEUS_ENABLED=true
-      - JWT_SECRET_KEY=your-secret-key-change-in-production
+      - JWT_SECRET_KEY=your-secret-key-here-change-in-production
       - JWT_ALGORITHM=HS256
       - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - CORS_ORIGINS=["http://localhost:3000", "http://localhost:8080"]
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -49,23 +48,6 @@ services:
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d {{ prefix_name }}_{{ suffix_name }}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
-    networks:
-      - "{{ prefix-name }}-{{ suffix-name }}-network"
-
-  redis:
-    image: redis:7-alpine
-    container_name: "{{ prefix-name }}-{{ suffix-name }}-redis"
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -117,8 +99,6 @@ services:
 volumes:
   postgres_data:
     driver: local
-  redis_data:
-    driver: local
   prometheus_data:
     driver: local
   grafana_data:
@@ -126,4 +106,4 @@ volumes:
 
 networks:
   "{{ prefix-name }}-{{ suffix-name }}-network":
-    driver: bridge 
+    driver: bridge

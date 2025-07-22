@@ -1,4 +1,4 @@
-# Multi-stage Docker build for {{ PrefixName }}{{ SuffixName }} REST Service
+# Multi-stage Docker build for {{ PrefixName }} {{ SuffixName }}
 FROM python:3.11-slim as builder
 
 # Set environment variables for Python
@@ -35,10 +35,10 @@ COPY {{ prefix-name }}-{{ suffix-name }}-api/src ./{{ prefix-name }}-{{ suffix-n
 COPY {{ prefix-name }}-{{ suffix-name }}-client/src ./{{ prefix-name }}-{{ suffix-name }}-client/src/
 COPY {{ prefix-name }}-{{ suffix-name }}-server/src ./{{ prefix-name }}-{{ suffix-name }}-server/src/
 
-# Copy scripts and other files
+# Copy scripts
 COPY scripts ./scripts
 
-# Install dependencies (this will install all packages)
+# Install dependencies
 RUN uv sync --frozen --no-dev
 
 # Production stage
@@ -66,15 +66,15 @@ COPY --from=builder --chown=appuser:appuser /app /app
 # Switch to non-root user
 USER appuser
 
-# Set working directory to server package
+# Set working directory to server package to avoid namespace conflicts
 WORKDIR /app/{{ prefix-name }}-{{ suffix-name }}-server/src
 
-# Expose ports
+# Expose ports (FastAPI default 8000, management 8080)
 EXPOSE 8000 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:8080/health/live || exit 1
 
 # Default command  
-CMD ["python", "-m", "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main"] 
+CMD ["python", "-m", "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main"]
