@@ -1,17 +1,15 @@
-"""Data transfer objects for the {{ PrefixName }} {{ SuffixName }} API."""
+"""Data transfer objects for the Example Service API."""
 
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 
-class {{ PrefixName }}Dto(BaseModel):
-    """Data transfer object for {{ PrefixName }} entities."""
+class ExampleDto(BaseModel):
+    """Data transfer object for Example entities."""
     
-    id: Optional[str] = Field(None, description="Unique identifier for the {{ prefix_name }}")
-    name: str = Field(..., description="Name of the {{ prefix_name }}", min_length=1, max_length=255)
-    description: Optional[str] = Field(None, description="Description of the {{ prefix_name }}")
-    status: Optional[str] = Field("active", description="Status of the {{ prefix_name }}")
+    id: Optional[str] = Field(None, description="Unique identifier for the example")
+    name: str = Field(..., description="Name of the example", min_length=1, max_length=255)
 
     class Config:
         """Pydantic configuration."""
@@ -20,30 +18,29 @@ class {{ PrefixName }}Dto(BaseModel):
         }
 
 
-class Get{{ PrefixName }}Request(BaseModel):
-    """Request model for getting a single {{ prefix_name }}."""
+class GetExampleRequest(BaseModel):
+    """Request model for getting a single example."""
     
-    id: str = Field(..., description="The ID of the {{ prefix_name }} to retrieve")
+    id: str = Field(..., description="The ID of the example to retrieve")
 
 
-class Get{{ PrefixName }}Response(BaseModel):
-    """Response model for getting a single {{ prefix_name }}."""
+class GetExampleResponse(BaseModel):
+    """Response model for getting a single example."""
     
-    {{ prefix_name }}: {{ PrefixName }}Dto = Field(..., description="The requested {{ prefix_name }}")
+    example: ExampleDto = Field(..., description="The requested example")
 
 
-class Get{{ PrefixName }}sRequest(BaseModel):
-    """Request model for getting multiple {{ prefix_name }}s with pagination."""
+class GetExamplesRequest(BaseModel):
+    """Request model for getting multiple examples with pagination."""
     
     start_page: int = Field(0, description="Starting page number (0-based)", ge=0)
     page_size: int = Field(10, description="Number of items per page", ge=1, le=100)
-    status: Optional[str] = Field(None, description="Filter by status")
 
 
-class Get{{ PrefixName }}sResponse(BaseModel):
-    """Response model for getting multiple {{ prefix_name }}s with pagination metadata."""
+class GetExamplesResponse(BaseModel):
+    """Response model for getting multiple examples with pagination metadata."""
     
-    {{ prefix_name }}s: List[{{ PrefixName }}Dto] = Field(default_factory=list, description="List of {{ prefix_name }}s")
+    examples: List[ExampleDto] = Field(default_factory=list, description="List of examples")
     has_next: bool = Field(False, description="Whether there is a next page")
     has_previous: bool = Field(False, description="Whether there is a previous page")
     next_page: int = Field(0, description="Next page number")
@@ -52,25 +49,25 @@ class Get{{ PrefixName }}sResponse(BaseModel):
     total_elements: int = Field(0, description="Total number of elements")
 
 
-class Create{{ PrefixName }}Response(BaseModel):
-    """Response model for creating a {{ prefix_name }}."""
+class CreateExampleResponse(BaseModel):
+    """Response model for creating an example."""
     
-    {{ prefix_name }}: {{ PrefixName }}Dto = Field(..., description="The created {{ prefix_name }}")
+    example: ExampleDto = Field(..., description="The created example")
 
 
-class Update{{ PrefixName }}Response(BaseModel):
-    """Response model for updating a {{ prefix_name }}."""
+class UpdateExampleResponse(BaseModel):
+    """Response model for updating an example."""
     
-    {{ prefix_name }}: {{ PrefixName }}Dto = Field(..., description="The updated {{ prefix_name }}")
+    example: ExampleDto = Field(..., description="The updated example")
 
 
-class Delete{{ PrefixName }}Request(BaseModel):
-    """Request model for deleting a {{ prefix_name }}."""
+class DeleteExampleRequest(BaseModel):
+    """Request model for deleting an example."""
     
-    id: str = Field(..., description="The ID of the {{ prefix_name }} to delete")
+    id: str = Field(..., description="The ID of the example to delete")
 
 
-class Delete{{ PrefixName }}Response(BaseModel):
-    """Response model for deleting a {{ prefix_name }}."""
+class DeleteExampleResponse(BaseModel):
+    """Response model for deleting an example."""
     
     message: str = Field(..., description="Confirmation message") 
