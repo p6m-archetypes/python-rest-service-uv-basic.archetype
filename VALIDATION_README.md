@@ -170,7 +170,7 @@ rm -rf /tmp/tmp.XXXXXXXXX
 3. **Template Variables Not Replaced**
    - Review archetype.rhai script
    - Check template syntax in source files
-   - Verify test_answers.yaml completeness
+   - Verify test_answers_complete.yaml completeness
 
 4. **API Endpoints Fail**
    - Check if database is properly initialized
