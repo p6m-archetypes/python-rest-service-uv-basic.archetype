@@ -570,7 +570,7 @@ class {{ PrefixName }}ServiceClient:
             # Make authenticated REST API call
             response = await self._make_authenticated_request(
                 "PUT",
-                f"{self.base_url}/api/v1/{{ prefix_name }}s/{{{ prefix_name }}.id}",
+                f"{self.base_url}/api/v1/{{ prefix_name }}s/{{ '{' }}{{ prefix_name }}.id{{ '}' }}",
                 json=payload
             )
             
@@ -581,7 +581,7 @@ class {{ PrefixName }}ServiceClient:
                 logger.info("{{ PrefixName }} updated successfully", {{ prefix_name }}_id=result.{{ prefix_name }}.id)
                 return result
             else:
-                await self._handle_error_response(response, f"updating {{ prefix_name }} {{{ prefix_name }}.id}")
+                await self._handle_error_response(response, f"updating {{ prefix_name }} {{ '{' }}{{ prefix_name }}.id{{ '}' }}")
                 
         except httpx.RequestError as e:
             logger.error("Network error updating {{ prefix_name }}", error=str(e), {{ prefix_name }}_id={{ prefix_name }}.id)

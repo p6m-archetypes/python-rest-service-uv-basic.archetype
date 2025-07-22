@@ -7,7 +7,7 @@ this FastAPI app provides REST endpoints that delegate to the same business logi
 """
 
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -352,7 +352,7 @@ def _add_routes(app: FastAPI) -> None:
         except Exception as e:
             raise handle_unexpected_exception(e, "creating {{ prefix_name }}")
     
-    @app.get("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}", response_model=Get{{ PrefixName }}Response)
+    @app.get("/api/v1/{{ prefix_name }}s/{{ '{' }}{{ prefix_name }}_id{{ '}' }}", response_model=Get{{ PrefixName }}Response)
     async def get_{{ prefix_name }}(
         {{ prefix_name }}_id: str,
         service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
@@ -373,7 +373,7 @@ def _add_routes(app: FastAPI) -> None:
         except Exception as e:
             raise handle_unexpected_exception(e, f"getting {{ prefix_name }}", {{ prefix_name }}_id)
     
-    @app.put("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}", response_model=Update{{ PrefixName }}Response)
+    @app.put("/api/v1/{{ prefix_name }}s/{{ '{' }}{{ prefix_name }}_id{{ '}' }}", response_model=Update{{ PrefixName }}Response)
     async def update_{{ prefix_name }}(
         {{ prefix_name }}_id: str,
         request: dict,
@@ -392,26 +392,24 @@ def _add_routes(app: FastAPI) -> None:
             return result
             
         except ServiceException as e:
-            logger.error(f"Service error updating {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            logger.error(f"Service error updating {{ prefix_name }} {{ '{' }}{{ prefix_name }}_id{{ '}' }}: {e}")
             if "not found" in str(e).lower():
                 raise HTTPException(status_code=404, detail=str(e))
-            elif "validation" in str(e).lower() or "invalid" in str(e).lower():
-                raise HTTPException(status_code=400, detail=str(e))
             else:
                 raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            logger.error(f"Unexpected error updating {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            logger.error(f"Unexpected error updating {{ prefix_name }} {{ '{' }}{{ prefix_name }}_id{{ '}' }}: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
     
-    @app.delete("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}", response_model=Delete{{ PrefixName }}Response, status_code=200)
+    @app.delete("/api/v1/{{ prefix_name }}s/{{ '{' }}{{ prefix_name }}_id{{ '}' }}", response_model=Delete{{ PrefixName }}Response, status_code=200)
     async def delete_{{ prefix_name }}(
         {{ prefix_name }}_id: str,
         service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
     ):
-        """Delete a {{ prefix_name }}."""
+        """Delete a {{ prefix_name }} by ID."""
         try:
-            # Convert path parameter to service request
-            request = fastapi_to_delete_{{ prefix_name }}_request({{ prefix_name }}_id)
+            # Convert FastAPI parameter to core service request
+            request = Delete{{ PrefixName }}Request(id={{ prefix_name }}_id)
             
             # Delegate to core service
             result = await service.delete_{{ prefix_name }}(request)
@@ -420,15 +418,13 @@ def _add_routes(app: FastAPI) -> None:
             return result
             
         except ServiceException as e:
-            logger.error(f"Service error deleting {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            logger.error(f"Service error deleting {{ prefix_name }} {{ '{' }}{{ prefix_name }}_id{{ '}' }}: {e}")
             if "not found" in str(e).lower():
                 raise HTTPException(status_code=404, detail=str(e))
-            elif "invalid" in str(e).lower():
-                raise HTTPException(status_code=400, detail=str(e))
             else:
                 raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            logger.error(f"Unexpected error deleting {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            logger.error(f"Unexpected error deleting {{ prefix_name }} {{ '{' }}{{ prefix_name }}_id{{ '}' }}: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
 
 
