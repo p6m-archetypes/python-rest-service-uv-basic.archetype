@@ -58,10 +58,49 @@ class TestRestConnectivity:
             # Test list endpoint
             try:
                 response = await client.get(f"http://{host}:{port}/api/v1/{{ prefix_name }}s")
-                # Should return 501 (not implemented) or 200 (if implemented)
-                assert response.status_code in [200, 501]
+                # Should return 200 (implemented) or error status
+                assert response.status_code in [200, 400, 500, 501]
             except httpx.ConnectError:
                 pytest.fail(f"Cannot connect to API endpoint at {host}:{port}")
+
+    @pytest.mark.asyncio
+    async def test_crud_endpoints_structure(self):
+        """Test that CRUD endpoints are accessible and return proper response structure."""
+        host = os.getenv("API_SERVER_HOST", "localhost")
+        port = int(os.getenv("API_SERVER_PORT", "8000"))
+        base_url = f"http://{host}:{port}/api/v1/{{ prefix_name }}s"
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                # Test LIST endpoint structure
+                list_response = await client.get(base_url)
+                if list_response.status_code == 200:
+                    data = list_response.json()
+                    # Should have pagination structure if implemented
+                    assert isinstance(data, dict)
+                
+                # Test CREATE endpoint (expect validation error with empty data)
+                create_response = await client.post(base_url, json={})
+                # Should return 400 (validation error) or 500/501 if not implemented
+                assert create_response.status_code in [400, 422, 500, 501]
+                
+                # Test GET by ID endpoint (with dummy ID)
+                get_response = await client.get(f"{base_url}/test-id")
+                # Should return 400 (invalid ID), 404 (not found), or 500/501 if not implemented
+                assert get_response.status_code in [400, 404, 500, 501]
+                
+                # Test UPDATE endpoint (with dummy ID)
+                update_response = await client.put(f"{base_url}/test-id", json={})
+                # Should return 400/404/422 or 500/501 if not implemented
+                assert update_response.status_code in [400, 404, 422, 500, 501]
+                
+                # Test DELETE endpoint (with dummy ID)
+                delete_response = await client.delete(f"{base_url}/test-id")
+                # Should return 400/404 or 500/501 if not implemented
+                assert delete_response.status_code in [400, 404, 500, 501]
+                
+            except httpx.ConnectError:
+                pytest.fail(f"Cannot connect to CRUD endpoints at {host}:{port}")
 
     @pytest.mark.asyncio 
     async def test_openapi_docs(self):

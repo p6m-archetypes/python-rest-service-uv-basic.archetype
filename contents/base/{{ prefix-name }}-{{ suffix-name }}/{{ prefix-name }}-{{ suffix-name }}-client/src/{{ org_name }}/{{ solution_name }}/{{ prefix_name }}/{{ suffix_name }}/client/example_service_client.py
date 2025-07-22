@@ -1,343 +1,381 @@
-"""gRPC client for Example Service."""
+"""REST HTTP client for {{ PrefixName }} {{ SuffixName }}."""
 
-from typing import Optional
+from typing import Optional, Dict, Any
+import json
 
-import grpc
+import httpx
 import structlog
 
-# Note: These imports will work once we set up proper proto generation and dependencies
-# import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ prefix_name }}_{{ suffix_name }}_pb2 as pb2
-# import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ prefix_name }}_{{ suffix_name }}_pb2_grpc as pb2_grpc
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
-#     CreateExampleResponse,
-#     DeleteExampleRequest,
-#     DeleteExampleResponse,
-#     ExampleDto,
-#     GetExampleRequest,
-#     GetExampleResponse,
-#     GetExamplesRequest,
-#     GetExamplesResponse,
-#     UpdateExampleResponse,
-# )
+# Import DTOs from API models
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
+    Create{{ PrefixName }}Response,
+    Delete{{ PrefixName }}Request,
+    Delete{{ PrefixName }}Response,
+    {{ PrefixName }}Dto,
+    Get{{ PrefixName }}Request,
+    Get{{ PrefixName }}Response,
+    Get{{ PrefixName }}sRequest,
+    Get{{ PrefixName }}sResponse,
+    Update{{ PrefixName }}Response,
+)
 
 logger = structlog.get_logger(__name__)
 
 
-class ExampleServiceClient:
-    """Client for connecting to the Example Service gRPC API."""
+class {{ PrefixName }}ServiceClientError(Exception):
+    """Base exception for {{ PrefixName }} service client errors."""
+    
+    def __init__(self, message: str, status_code: Optional[int] = None, response_body: Optional[str] = None):
+        super().__init__(message)
+        self.status_code = status_code
+        self.response_body = response_body
+
+
+class {{ PrefixName }}ServiceClient:
+    """Client for connecting to the {{ PrefixName }} {{ SuffixName }} REST API."""
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 9010,
-        channel: Optional[grpc.Channel] = None,
-        timeout: float = 30.0
+        base_url: str = "http://localhost:8000",
+        timeout: float = 30.0,
+        headers: Optional[Dict[str, str]] = None,
+        verify_ssl: bool = True,
+        follow_redirects: bool = True
     ) -> None:
-        """Initialize the Example Service client.
+        """Initialize the {{ PrefixName }} Service client.
         
         Args:
-            host: gRPC server host
-            port: gRPC server port
-            channel: Optional existing gRPC channel to use
+            base_url: Base URL for the REST API (e.g., "http://localhost:8000")
             timeout: Default timeout for requests in seconds
+            headers: Optional default headers to include with requests
+            verify_ssl: Whether to verify SSL certificates
+            follow_redirects: Whether to follow HTTP redirects
         """
-        self.host = host
-        self.port = port
+        self.base_url = base_url.rstrip('/')
         self.timeout = timeout
+        self.default_headers = headers or {}
         
-        if channel:
-            self.channel = channel
-        else:
-            # Create an insecure channel (for development)
-            # In production, you would typically use secure channels with TLS
-            self.channel = grpc.insecure_channel(f"{host}:{port}")
+        # Set up default headers
+        self.default_headers.setdefault('Content-Type', 'application/json')
+        self.default_headers.setdefault('Accept', 'application/json')
         
-        # Create the stub (will be implemented once we have protobuf classes)
-        # self.stub = pb2_grpc.ExampleServiceStub(self.channel)
-        self.stub = None
+        # Create httpx client with configuration
+        self.client = httpx.AsyncClient(
+            timeout=httpx.Timeout(timeout),
+            headers=self.default_headers,
+            verify=verify_ssl,
+            follow_redirects=follow_redirects
+        )
         
         logger.info(
-            "Example Service client initialized",
-            host=host,
-            port=port,
-            timeout=timeout
+            "{{ PrefixName }} Service client initialized",
+            base_url=base_url,
+            timeout=timeout,
+            verify_ssl=verify_ssl
         )
 
     @classmethod
-    def create(cls, host: str, port: int) -> "ExampleServiceClient":
+    def create(cls, base_url: str, timeout: float = 30.0) -> "{{ PrefixName }}ServiceClient":
         """Factory method to create a client instance.
         
         Args:
-            host: gRPC server host
-            port: gRPC server port
+            base_url: Base URL for the REST API
+            timeout: Request timeout in seconds
             
         Returns:
             Configured client instance
         """
-        return cls(host=host, port=port)
+        return cls(base_url=base_url, timeout=timeout)
 
-    async def create_example(self, example: "ExampleDto") -> "CreateExampleResponse":
-        """Create a new example.
+    async def create_{{ prefix_name }}(self, {{ prefix_name }}: {{ PrefixName }}Dto) -> Create{{ PrefixName }}Response:
+        """Create a new {{ prefix_name }}.
         
         Args:
-            example: Example data to create
+            {{ prefix_name }}: {{ PrefixName }} data to create
             
         Returns:
-            Response containing the created example
+            Response containing the created {{ prefix_name }}
             
         Raises:
-            grpc.RpcError: If the gRPC call fails
+            {{ PrefixName }}ServiceClientError: If the API call fails
         """
-        logger.info("Creating example", name=example.name if hasattr(example, 'name') else 'unknown')
+        logger.info("Creating {{ prefix_name }}", name={{ prefix_name }}.name)
         
         try:
-            # Convert domain model to protobuf
-            pb_request = self._example_dto_to_pb(example)
+            # Convert DTO to JSON payload
+            payload = {{ prefix_name }}.model_dump(exclude_none=True)
             
-            # Make gRPC call
-            # pb_response = await self.stub.CreateExample(pb_request, timeout=self.timeout)
-            pb_response = None  # Placeholder
+            # Make REST API call
+            response = await self.client.post(
+                f"{self.base_url}/api/v1/{{ prefix_name }}s",
+                json=payload
+            )
             
-            # Convert protobuf response to domain model
-            response = self._pb_to_create_example_response(pb_response)
-            
-            logger.info("Example created successfully", example_id=response.example.id if response.example else None)
-            return response
-            
-        except grpc.RpcError as e:
-            logger.error("Failed to create example", error=str(e), grpc_code=e.code())
-            raise
+            # Handle response
+            if response.status_code == 201:
+                response_data = response.json()
+                result = Create{{ PrefixName }}Response(**response_data)
+                logger.info("{{ PrefixName }} created successfully", {{ prefix_name }}_id=result.{{ prefix_name }}.id)
+                return result
+            else:
+                await self._handle_error_response(response, "creating {{ prefix_name }}")
+                
+        except httpx.RequestError as e:
+            logger.error("Network error creating {{ prefix_name }}", error=str(e))
+            raise {{ PrefixName }}ServiceClientError(f"Network error: {str(e)}")
         except Exception as e:
-            logger.error("Unexpected error creating example", error=str(e), exc_info=True)
-            raise
+            logger.error("Unexpected error creating {{ prefix_name }}", error=str(e), exc_info=True)
+            raise {{ PrefixName }}ServiceClientError(f"Unexpected error: {str(e)}")
 
-    async def get_examples(self, request: "GetExamplesRequest") -> "GetExamplesResponse":
-        """Get a paginated list of examples.
+    async def get_{{ prefix_name }}s(self, request: Get{{ PrefixName }}sRequest) -> Get{{ PrefixName }}sResponse:
+        """Get a paginated list of {{ prefix_name }}s.
         
         Args:
             request: Pagination request parameters
             
         Returns:
-            Response containing examples and pagination metadata
+            Response containing {{ prefix_name }}s and pagination metadata
             
         Raises:
-            grpc.RpcError: If the gRPC call fails
+            {{ PrefixName }}ServiceClientError: If the API call fails
         """
-        logger.info("Getting examples", start_page=request.start_page, page_size=request.page_size)
+        logger.info("Getting {{ prefix_name }}s", start_page=request.start_page, page_size=request.page_size)
         
         try:
-            # Convert domain model to protobuf
-            pb_request = self._get_examples_request_to_pb(request)
+            # Build query parameters
+            params = {
+                "page": request.start_page,
+                "size": request.page_size
+            }
+            if request.status:
+                params["status"] = request.status
             
-            # Make gRPC call
-            # pb_response = await self.stub.GetExamples(pb_request, timeout=self.timeout)
-            pb_response = None  # Placeholder
+            # Make REST API call
+            response = await self.client.get(
+                f"{self.base_url}/api/v1/{{ prefix_name }}s",
+                params=params
+            )
             
-            # Convert protobuf response to domain model
-            response = self._pb_to_get_examples_response(pb_response)
-            
-            logger.info("Examples retrieved successfully", count=len(response.examples))
-            return response
-            
-        except grpc.RpcError as e:
-            logger.error("Failed to get examples", error=str(e), grpc_code=e.code())
-            raise
+            # Handle response
+            if response.status_code == 200:
+                response_data = response.json()
+                result = Get{{ PrefixName }}sResponse(**response_data)
+                logger.info("{{ PrefixName }}s retrieved successfully", count=len(result.{{ prefix_name }}s))
+                return result
+            else:
+                await self._handle_error_response(response, "getting {{ prefix_name }}s")
+                
+        except httpx.RequestError as e:
+            logger.error("Network error getting {{ prefix_name }}s", error=str(e))
+            raise {{ PrefixName }}ServiceClientError(f"Network error: {str(e)}")
         except Exception as e:
-            logger.error("Unexpected error getting examples", error=str(e), exc_info=True)
-            raise
+            logger.error("Unexpected error getting {{ prefix_name }}s", error=str(e), exc_info=True)
+            raise {{ PrefixName }}ServiceClientError(f"Unexpected error: {str(e)}")
 
-    async def get_example(self, request: "GetExampleRequest") -> "GetExampleResponse":
-        """Get a single example by ID.
+    async def get_{{ prefix_name }}(self, request: Get{{ PrefixName }}Request) -> Get{{ PrefixName }}Response:
+        """Get a single {{ prefix_name }} by ID.
         
         Args:
-            request: Request containing the example ID
+            request: Request containing the {{ prefix_name }} ID
             
         Returns:
-            Response containing the requested example
+            Response containing the requested {{ prefix_name }}
             
         Raises:
-            grpc.RpcError: If the gRPC call fails
+            {{ PrefixName }}ServiceClientError: If the API call fails
         """
-        logger.info("Getting example", example_id=request.id)
+        logger.info("Getting {{ prefix_name }}", {{ prefix_name }}_id=request.id)
         
         try:
-            # Convert domain model to protobuf
-            pb_request = self._get_example_request_to_pb(request)
+            # Make REST API call
+            response = await self.client.get(
+                f"{self.base_url}/api/v1/{{ prefix_name }}s/{request.id}"
+            )
             
-            # Make gRPC call
-            # pb_response = await self.stub.GetExample(pb_request, timeout=self.timeout)
-            pb_response = None  # Placeholder
-            
-            # Convert protobuf response to domain model
-            response = self._pb_to_get_example_response(pb_response)
-            
-            logger.info("Example retrieved successfully", example_id=response.example.id if response.example else None)
-            return response
-            
-        except grpc.RpcError as e:
-            logger.error("Failed to get example", error=str(e), grpc_code=e.code())
-            raise
+            # Handle response
+            if response.status_code == 200:
+                response_data = response.json()
+                result = Get{{ PrefixName }}Response(**response_data)
+                logger.info("{{ PrefixName }} retrieved successfully", {{ prefix_name }}_id=result.{{ prefix_name }}.id)
+                return result
+            else:
+                await self._handle_error_response(response, f"getting {{ prefix_name }} {request.id}")
+                
+        except httpx.RequestError as e:
+            logger.error("Network error getting {{ prefix_name }}", error=str(e), {{ prefix_name }}_id=request.id)
+            raise {{ PrefixName }}ServiceClientError(f"Network error: {str(e)}")
         except Exception as e:
-            logger.error("Unexpected error getting example", error=str(e), exc_info=True)
-            raise
+            logger.error("Unexpected error getting {{ prefix_name }}", error=str(e), {{ prefix_name }}_id=request.id, exc_info=True)
+            raise {{ PrefixName }}ServiceClientError(f"Unexpected error: {str(e)}")
 
-    async def update_example(self, example: "ExampleDto") -> "UpdateExampleResponse":
-        """Update an existing example.
+    async def update_{{ prefix_name }}(self, {{ prefix_name }}: {{ PrefixName }}Dto) -> Update{{ PrefixName }}Response:
+        """Update an existing {{ prefix_name }}.
         
         Args:
-            example: Updated example data
+            {{ prefix_name }}: Updated {{ prefix_name }} data
             
         Returns:
-            Response containing the updated example
+            Response containing the updated {{ prefix_name }}
             
         Raises:
-            grpc.RpcError: If the gRPC call fails
+            {{ PrefixName }}ServiceClientError: If the API call fails
         """
-        logger.info("Updating example", example_id=example.id if hasattr(example, 'id') else 'unknown')
+        if not {{ prefix_name }}.id:
+            raise {{ PrefixName }}ServiceClientError("{{ PrefixName }} ID is required for update operations")
+            
+        logger.info("Updating {{ prefix_name }}", {{ prefix_name }}_id={{ prefix_name }}.id)
         
         try:
-            # Convert domain model to protobuf
-            pb_request = self._example_dto_to_pb(example)
+            # Convert DTO to JSON payload (exclude ID from body, it's in the URL)
+            payload = {{ prefix_name }}.model_dump(exclude_none=True, exclude={'id'})
             
-            # Make gRPC call
-            # pb_response = await self.stub.UpdateExample(pb_request, timeout=self.timeout)
-            pb_response = None  # Placeholder
+            # Make REST API call
+            response = await self.client.put(
+                f"{self.base_url}/api/v1/{{ prefix_name }}s/{{{ prefix_name }}.id}",
+                json=payload
+            )
             
-            # Convert protobuf response to domain model
-            response = self._pb_to_update_example_response(pb_response)
-            
-            logger.info("Example updated successfully", example_id=response.example.id if response.example else None)
-            return response
-            
-        except grpc.RpcError as e:
-            logger.error("Failed to update example", error=str(e), grpc_code=e.code())
-            raise
+            # Handle response
+            if response.status_code == 200:
+                response_data = response.json()
+                result = Update{{ PrefixName }}Response(**response_data)
+                logger.info("{{ PrefixName }} updated successfully", {{ prefix_name }}_id=result.{{ prefix_name }}.id)
+                return result
+            else:
+                await self._handle_error_response(response, f"updating {{ prefix_name }} {{{ prefix_name }}.id}")
+                
+        except httpx.RequestError as e:
+            logger.error("Network error updating {{ prefix_name }}", error=str(e), {{ prefix_name }}_id={{ prefix_name }}.id)
+            raise {{ PrefixName }}ServiceClientError(f"Network error: {str(e)}")
         except Exception as e:
-            logger.error("Unexpected error updating example", error=str(e), exc_info=True)
-            raise
+            logger.error("Unexpected error updating {{ prefix_name }}", error=str(e), {{ prefix_name }}_id={{ prefix_name }}.id, exc_info=True)
+            raise {{ PrefixName }}ServiceClientError(f"Unexpected error: {str(e)}")
 
-    async def delete_example(self, request: "DeleteExampleRequest") -> "DeleteExampleResponse":
-        """Delete an example by ID.
+    async def delete_{{ prefix_name }}(self, request: Delete{{ PrefixName }}Request) -> Delete{{ PrefixName }}Response:
+        """Delete a {{ prefix_name }} by ID.
         
         Args:
-            request: Request containing the example ID to delete
+            request: Request containing the {{ prefix_name }} ID to delete
             
         Returns:
             Response with confirmation message
             
         Raises:
-            grpc.RpcError: If the gRPC call fails
+            {{ PrefixName }}ServiceClientError: If the API call fails
         """
-        logger.info("Deleting example", example_id=request.id)
+        logger.info("Deleting {{ prefix_name }}", {{ prefix_name }}_id=request.id)
         
         try:
-            # Convert domain model to protobuf
-            pb_request = self._delete_example_request_to_pb(request)
+            # Make REST API call
+            response = await self.client.delete(
+                f"{self.base_url}/api/v1/{{ prefix_name }}s/{request.id}"
+            )
             
-            # Make gRPC call
-            # pb_response = await self.stub.DeleteExample(pb_request, timeout=self.timeout)
-            pb_response = None  # Placeholder
-            
-            # Convert protobuf response to domain model
-            response = self._pb_to_delete_example_response(pb_response)
-            
-            logger.info("Example deleted successfully", message=response.message)
-            return response
-            
-        except grpc.RpcError as e:
-            logger.error("Failed to delete example", error=str(e), grpc_code=e.code())
-            raise
+            # Handle response
+            if response.status_code == 200:
+                response_data = response.json()
+                result = Delete{{ PrefixName }}Response(**response_data)
+                logger.info("{{ PrefixName }} deleted successfully", message=result.message)
+                return result
+            else:
+                await self._handle_error_response(response, f"deleting {{ prefix_name }} {request.id}")
+                
+        except httpx.RequestError as e:
+            logger.error("Network error deleting {{ prefix_name }}", error=str(e), {{ prefix_name }}_id=request.id)
+            raise {{ PrefixName }}ServiceClientError(f"Network error: {str(e)}")
         except Exception as e:
-            logger.error("Unexpected error deleting example", error=str(e), exc_info=True)
-            raise
+            logger.error("Unexpected error deleting {{ prefix_name }}", error=str(e), {{ prefix_name }}_id=request.id, exc_info=True)
+            raise {{ PrefixName }}ServiceClientError(f"Unexpected error: {str(e)}")
 
-    def close(self) -> None:
-        """Close the gRPC channel."""
-        if self.channel:
-            self.channel.close()
-            logger.info("gRPC channel closed")
+    async def close(self) -> None:
+        """Close the HTTP client."""
+        if self.client:
+            await self.client.aclose()
+            logger.info("HTTP client closed")
 
-    def __enter__(self) -> "ExampleServiceClient":
-        """Context manager entry."""
+    async def __aenter__(self) -> "{{ PrefixName }}ServiceClient":
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Async context manager exit."""
+        await self.close()
+
+    # Synchronous context manager support for backward compatibility
+    def __enter__(self) -> "{{ PrefixName }}ServiceClient":
+        """Synchronous context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        """Context manager exit."""
-        self.close()
+        """Synchronous context manager exit."""
+        # Note: This is not ideal for async clients, but provided for compatibility
+        # Users should prefer the async context manager
+        import asyncio
+        try:
+            asyncio.get_running_loop()
+            logger.warning("Using synchronous context manager in async context. Consider using async context manager.")
+        except RuntimeError:
+            # No event loop running, we can create one
+            asyncio.run(self.close())
 
-    # Conversion methods (placeholders until we have actual protobuf classes)
-    
-    def _example_dto_to_pb(self, example_dto):
-        """Convert domain ExampleDto to protobuf ExampleDto."""
-        # Placeholder implementation
-        return type('ExampleDto', (), {
-            'id': type('StringValue', (), {'value': example_dto.id})() if example_dto.id else None,
-            'name': example_dto.name
-        })()
-
-    def _get_examples_request_to_pb(self, request):
-        """Convert domain GetExamplesRequest to protobuf."""
-        return type('GetExamplesRequest', (), {
-            'start_page': request.start_page,
-            'page_size': request.page_size
-        })()
-
-    def _get_example_request_to_pb(self, request):
-        """Convert domain GetExampleRequest to protobuf."""
-        return type('GetExampleRequest', (), {
-            'id': request.id
-        })()
-
-    def _delete_example_request_to_pb(self, request):
-        """Convert domain DeleteExampleRequest to protobuf."""
-        return type('DeleteExampleRequest', (), {
-            'id': request.id
-        })()
-
-    def _pb_to_create_example_response(self, pb_response):
-        """Convert protobuf CreateExampleResponse to domain model."""
-        # Placeholder implementation
-        return type('CreateExampleResponse', (), {
-            'example': self._pb_to_example_dto(pb_response.example) if pb_response else None
-        })()
-
-    def _pb_to_get_examples_response(self, pb_response):
-        """Convert protobuf GetExamplesResponse to domain model."""
-        # Placeholder implementation
-        return type('GetExamplesResponse', (), {
-            'examples': [self._pb_to_example_dto(ex) for ex in pb_response.example] if pb_response else [],
-            'has_next': pb_response.has_next if pb_response else False,
-            'has_previous': pb_response.has_previous if pb_response else False,
-            'next_page': pb_response.next_page if pb_response else 0,
-            'previous_page': pb_response.previous_page if pb_response else 0,
-            'total_pages': pb_response.total_pages if pb_response else 0,
-            'total_elements': pb_response.total_elements if pb_response else 0
-        })()
-
-    def _pb_to_get_example_response(self, pb_response):
-        """Convert protobuf GetExampleResponse to domain model."""
-        return type('GetExampleResponse', (), {
-            'example': self._pb_to_example_dto(pb_response.example) if pb_response else None
-        })()
-
-    def _pb_to_update_example_response(self, pb_response):
-        """Convert protobuf UpdateExampleResponse to domain model."""
-        return type('UpdateExampleResponse', (), {
-            'example': self._pb_to_example_dto(pb_response.example) if pb_response else None
-        })()
-
-    def _pb_to_delete_example_response(self, pb_response):
-        """Convert protobuf DeleteExampleResponse to domain model."""
-        return type('DeleteExampleResponse', (), {
-            'message': pb_response.message if pb_response else ''
-        })()
-
-    def _pb_to_example_dto(self, pb_example):
-        """Convert protobuf ExampleDto to domain ExampleDto."""
-        if not pb_example:
-            return None
+    async def _handle_error_response(self, response: httpx.Response, operation: str) -> None:
+        """Handle error responses from the API.
         
-        return type('ExampleDto', (), {
-            'id': pb_example.id.value if hasattr(pb_example, 'id') and pb_example.id else None,
-            'name': pb_example.name if hasattr(pb_example, 'name') else ''
-        })()
+        Args:
+            response: The HTTP response object
+            operation: Description of the operation that failed
+            
+        Raises:
+            {{ PrefixName }}ServiceClientError: Always raises with appropriate error message
+        """
+        try:
+            error_data = response.json()
+            error_message = error_data.get('error', {}).get('message', f'HTTP {response.status_code}')
+        except (json.JSONDecodeError, KeyError):
+            error_message = f"HTTP {response.status_code}: {response.text}"
+        
+        logger.error(
+            f"API error {operation}",
+            status_code=response.status_code,
+            error_message=error_message,
+            response_body=response.text
+        )
+        
+        raise {{ PrefixName }}ServiceClientError(
+            f"API error {operation}: {error_message}",
+            status_code=response.status_code,
+            response_body=response.text
+        )
+
+    def set_auth_token(self, token: str) -> None:
+        """Set authentication token for future requests.
+        
+        Args:
+            token: JWT or API token to use for authentication
+        """
+        self.client.headers["Authorization"] = f"Bearer {token}"
+        logger.info("Authentication token set")
+
+    def remove_auth_token(self) -> None:
+        """Remove authentication token from future requests."""
+        self.client.headers.pop("Authorization", None)
+        logger.info("Authentication token removed")
+
+    def set_header(self, name: str, value: str) -> None:
+        """Set a custom header for future requests.
+        
+        Args:
+            name: Header name
+            value: Header value
+        """
+        self.client.headers[name] = value
+        logger.debug("Custom header set", header_name=name)
+
+    def remove_header(self, name: str) -> None:
+        """Remove a custom header from future requests.
+        
+        Args:
+            name: Header name to remove
+        """
+        self.client.headers.pop(name, None)
+        logger.debug("Custom header removed", header_name=name)
