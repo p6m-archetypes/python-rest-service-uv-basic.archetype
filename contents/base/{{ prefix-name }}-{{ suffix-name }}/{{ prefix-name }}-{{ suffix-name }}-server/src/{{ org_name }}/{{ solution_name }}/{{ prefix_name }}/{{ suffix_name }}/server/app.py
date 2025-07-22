@@ -38,6 +38,70 @@ from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.pers
 
 logger = logging.getLogger(__name__)
 
+# Global instances for dependency injection
+_database_config: DatabaseConfig = None
+
+
+async def get_database_session():
+    """Get database session for dependency injection."""
+    global _database_config
+    if _database_config is None:
+        _database_config = DatabaseConfig()
+        await _database_config.initialize()
+    
+    async with _database_config.get_session() as session:
+        yield session
+
+
+async def get_{{ prefix_name }}_repository(session = Depends(get_database_session)) -> {{ PrefixName }}Repository:
+    """Get {{ PrefixName }} repository instance for dependency injection."""
+    return {{ PrefixName }}Repository(session)
+
+
+async def get_{{ prefix_name }}_service(repository: {{ PrefixName }}Repository = Depends(get_{{ prefix_name }}_repository)) -> {{ PrefixName }}ServiceCore:
+    """Get {{ PrefixName }} service instance for dependency injection."""
+    return {{ PrefixName }}ServiceCore(repository)
+
+
+# DTO Conversion Functions
+def fastapi_to_get_{{ prefix_name }}_request({{ prefix_name }}_id: str) -> Get{{ PrefixName }}Request:
+    """Convert FastAPI path parameter to Get{{ PrefixName }}Request."""
+    return Get{{ PrefixName }}Request(id={{ prefix_name }}_id)
+
+
+def fastapi_to_delete_{{ prefix_name }}_request({{ prefix_name }}_id: str) -> Delete{{ PrefixName }}Request:
+    """Convert FastAPI path parameter to Delete{{ PrefixName }}Request."""
+    return Delete{{ PrefixName }}Request(id={{ prefix_name }}_id)
+
+
+def fastapi_to_get_{{ prefix_name }}s_request(page: int, size: int, status: Optional[str] = None) -> Get{{ PrefixName }}sRequest:
+    """Convert FastAPI query parameters to Get{{ PrefixName }}sRequest."""
+    return Get{{ PrefixName }}sRequest(
+        start_page=page,
+        page_size=size,
+        status=status
+    )
+
+
+def dict_to_{{ prefix_name }}_dto(data: dict) -> {{ PrefixName }}Dto:
+    """Convert dictionary data to {{ PrefixName }}Dto."""
+    return {{ PrefixName }}Dto(
+        id=data.get("id"),
+        name=data["name"],
+        description=data.get("description"),
+        status=data.get("status", "active")
+    )
+
+
+def create_error_response(status_code: int, message: str) -> Dict[str, Any]:
+    """Create standardized error response."""
+    return {
+        "error": {
+            "code": status_code,
+            "message": message
+        }
+    }
+
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -136,40 +200,144 @@ def _add_routes(app: FastAPI) -> None:
         raise HTTPException(status_code=501, detail="Token refresh - to be implemented")
     
     # {{ PrefixName }} business endpoints
-    @app.get("/api/v1/{{ prefix_name }}s")
+    @app.get("/api/v1/{{ prefix_name }}s", response_model=Get{{ PrefixName }}sResponse)
     async def list_{{ prefix_name }}s(
         page: int = Query(0, ge=0),
         size: int = Query(50, ge=1, le=100),
-        status: str = Query(None)
+        status: str = Query(None),
+        service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
     ):
         """List {{ prefix_name }}s with pagination."""
-        # TODO: Delegate to {{ PrefixName }}Service in core layer
-        # This should call {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.{{ prefix_name }}_service_core
-        raise HTTPException(status_code=501, detail="List {{ prefix_name }}s - to be implemented")
+        try:
+            # Convert FastAPI parameters to core service request
+            request = fastapi_to_get_{{ prefix_name }}s_request(page, size, status)
+            
+            # Delegate to core service
+            result = await service.get_{{ prefix_name }}s(request)
+            
+            # Return the result directly (already the correct response model)
+            return result
+            
+        except ServiceException as e:
+            logger.error(f"Service error listing {{ prefix_name }}s: {e}")
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error listing {{ prefix_name }}s: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
     
-    @app.post("/api/v1/{{ prefix_name }}s")
-    async def create_{{ prefix_name }}(request: dict):
+    @app.post("/api/v1/{{ prefix_name }}s", response_model=Create{{ PrefixName }}Response, status_code=201)
+    async def create_{{ prefix_name }}(
+        request: dict,
+        service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
+    ):
         """Create a new {{ prefix_name }}."""
-        # TODO: Delegate to {{ PrefixName }}Service in core layer
-        raise HTTPException(status_code=501, detail="Create {{ prefix_name }} - to be implemented")
+        try:
+            # Convert request data to DTO
+            {{ prefix_name }}_dto = dict_to_{{ prefix_name }}_dto(request)
+            
+            # Delegate to core service
+            result = await service.create_{{ prefix_name }}({{ prefix_name }}_dto)
+            
+            # Return the result directly (already the correct response model)
+            return result
+            
+        except ServiceException as e:
+            logger.error(f"Service error creating {{ prefix_name }}: {e}")
+            if "already exists" in str(e).lower():
+                raise HTTPException(status_code=409, detail=str(e))
+            elif "validation" in str(e).lower() or "invalid" in str(e).lower():
+                raise HTTPException(status_code=400, detail=str(e))
+            else:
+                raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error creating {{ prefix_name }}: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
     
-    @app.get("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}")
-    async def get_{{ prefix_name }}({{ prefix_name }}_id: str):
+    @app.get("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}", response_model=Get{{ PrefixName }}Response)
+    async def get_{{ prefix_name }}(
+        {{ prefix_name }}_id: str,
+        service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
+    ):
         """Get a specific {{ prefix_name }} by ID."""
-        # TODO: Delegate to {{ PrefixName }}Service in core layer
-        raise HTTPException(status_code=501, detail="Get {{ prefix_name }} - to be implemented")
+        try:
+            # Convert path parameter to service request
+            request = fastapi_to_get_{{ prefix_name }}_request({{ prefix_name }}_id)
+            
+            # Delegate to core service
+            result = await service.get_{{ prefix_name }}(request)
+            
+            # Return the result directly (already the correct response model)
+            return result
+            
+        except ServiceException as e:
+            logger.error(f"Service error getting {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail=str(e))
+            elif "invalid" in str(e).lower():
+                raise HTTPException(status_code=400, detail=str(e))
+            else:
+                raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error getting {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
     
-    @app.put("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}")
-    async def update_{{ prefix_name }}({{ prefix_name }}_id: str, request: dict):
+    @app.put("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}", response_model=Update{{ PrefixName }}Response)
+    async def update_{{ prefix_name }}(
+        {{ prefix_name }}_id: str,
+        request: dict,
+        service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
+    ):
         """Update an existing {{ prefix_name }}."""
-        # TODO: Delegate to {{ PrefixName }}Service in core layer
-        raise HTTPException(status_code=501, detail="Update {{ prefix_name }} - to be implemented")
+        try:
+            # Convert request data to DTO and set the ID
+            {{ prefix_name }}_dto = dict_to_{{ prefix_name }}_dto(request)
+            {{ prefix_name }}_dto.id = {{ prefix_name }}_id
+            
+            # Delegate to core service
+            result = await service.update_{{ prefix_name }}({{ prefix_name }}_dto)
+            
+            # Return the result directly (already the correct response model)
+            return result
+            
+        except ServiceException as e:
+            logger.error(f"Service error updating {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail=str(e))
+            elif "validation" in str(e).lower() or "invalid" in str(e).lower():
+                raise HTTPException(status_code=400, detail=str(e))
+            else:
+                raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error updating {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
     
-    @app.delete("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}")
-    async def delete_{{ prefix_name }}({{ prefix_name }}_id: str):
+    @app.delete("/api/v1/{{ prefix_name }}s/{{{ prefix_name }}_id}", response_model=Delete{{ PrefixName }}Response, status_code=200)
+    async def delete_{{ prefix_name }}(
+        {{ prefix_name }}_id: str,
+        service: {{ PrefixName }}ServiceCore = Depends(get_{{ prefix_name }}_service)
+    ):
         """Delete a {{ prefix_name }}."""
-        # TODO: Delegate to {{ PrefixName }}Service in core layer
-        raise HTTPException(status_code=501, detail="Delete {{ prefix_name }} - to be implemented")
+        try:
+            # Convert path parameter to service request
+            request = fastapi_to_delete_{{ prefix_name }}_request({{ prefix_name }}_id)
+            
+            # Delegate to core service
+            result = await service.delete_{{ prefix_name }}(request)
+            
+            # Return the result directly (already the correct response model)
+            return result
+            
+        except ServiceException as e:
+            logger.error(f"Service error deleting {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail=str(e))
+            elif "invalid" in str(e).lower():
+                raise HTTPException(status_code=400, detail=str(e))
+            else:
+                raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error deleting {{ prefix_name }} {{{ prefix_name }}_id}: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Create the application instance
