@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-# from ..utils.test_fixtures import TestDataFactory //TODO: Uncomment this when the fixtures are implemented
+# from ..utils.fixtures import TestDataFactory //TODO: Uncomment this when the fixtures are implemented
 
 class TestExampleServiceIntegration:
     """Integration tests for the complete Example Service stack."""
@@ -13,17 +13,17 @@ def test_import_handling():
     """Test that import error handling works correctly."""
     try:
         # Try to import the test fixtures to verify error handling
-        from ..utils.test_fixtures import (
+        from ..utils.fixtures import (
             DatabaseConfig, 
             TrashRepository, 
-            {{ PrefixName }}ServiceCore,
+            ExampleServiceCore,
             TestDataFactory
         )
         
         # If imports succeed, verify the classes exist
         assert DatabaseConfig is not None
         assert TrashRepository is not None  
-        assert {{ PrefixName }}ServiceCore is not None
+        assert ExampleServiceCore is not None
         assert TestDataFactory is not None
         
         print("✓ Import handling test: All imports successful")
@@ -35,7 +35,7 @@ def test_import_handling():
 
     def test_fixtures_importable():
         """Test that test fixtures can be imported without crashing."""
-        from ..utils.test_fixtures import TestDataFactory
+        from ..utils.fixtures import TestDataFactory
         
         # Just verify we can import it - don't try to use stub classes
         assert TestDataFactory is not None

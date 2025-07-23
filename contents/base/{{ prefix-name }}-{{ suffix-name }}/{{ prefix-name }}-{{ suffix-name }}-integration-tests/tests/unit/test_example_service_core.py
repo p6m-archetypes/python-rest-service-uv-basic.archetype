@@ -1,4 +1,4 @@
-"""Unit tests for {{ PrefixName }}ServiceCore."""
+"""Unit tests for ExampleServiceCore."""
 
 import uuid
 from unittest.mock import AsyncMock, Mock
@@ -6,15 +6,15 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 # Note: These imports will work once we set up proper dependencies
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.{{ prefix_name }}_service_core import {{ PrefixName }}ServiceCore
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.example_service_core import ExampleServiceCore
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.service_exception import ServiceException
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.error_code import ErrorCode
 
-# from ..utils.test_fixtures import TestDataFactory  //TODO: Uncomment this when the fixtures are implemented
+# from ..utils.fixtures import TestDataFactory  # TODO: Uncomment this when the fixtures are implemented
 
 
-class Test{{ PrefixName }}ServiceCore:
-    """Unit tests for {{ PrefixName }}ServiceCore business logic."""
+class TestExampleServiceCore:
+    """Unit tests for ExampleServiceCore business logic."""
 
     @pytest.fixture
     def mock_repository(self):
@@ -30,9 +30,9 @@ class Test{{ PrefixName }}ServiceCore:
 
     @pytest.fixture
     def example_service_core(self, mock_repository):
-        """Create {{ PrefixName }}ServiceCore with mock repository."""
+        """Create ExampleServiceCore with mock repository."""
         # This will be implemented once we have the actual service
-        # return {{ PrefixName }}ServiceCore(mock_repository)
+        # return ExampleServiceCore(mock_repository)
         
         # Placeholder for now
         service = Mock()
