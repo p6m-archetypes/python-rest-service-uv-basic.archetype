@@ -11,6 +11,7 @@ import signal
 import sys
 from typing import Optional
 
+import structlog
 import uvicorn
 from uvicorn.config import LOGGING_CONFIG
 
@@ -24,7 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def setup_logging(settings: Settings) -> None:

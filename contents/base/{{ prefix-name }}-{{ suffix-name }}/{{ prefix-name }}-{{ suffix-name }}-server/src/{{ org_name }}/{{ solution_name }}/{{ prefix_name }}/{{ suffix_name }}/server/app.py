@@ -9,6 +9,7 @@ this FastAPI app provides REST endpoints that delegate to the same business logi
 import logging
 from typing import Dict, Any, Optional
 
+import structlog
 from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -34,7 +35,7 @@ from .middleware.auth import get_auth_service
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.database_config import DatabaseConfig
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.example_repository import ExampleRepository
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Global instances for dependency injection  
 _database_config = None
