@@ -10,7 +10,7 @@ import pytest
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.service_exception import ServiceException
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.exception.error_code import ErrorCode
 
-from ..utils.test_fixtures import TestDataFactory
+# from ..utils.test_fixtures import TestDataFactory  //TODO: Uncomment this when the fixtures are implemented
 
 
 class Test{{ PrefixName }}ServiceCore:
