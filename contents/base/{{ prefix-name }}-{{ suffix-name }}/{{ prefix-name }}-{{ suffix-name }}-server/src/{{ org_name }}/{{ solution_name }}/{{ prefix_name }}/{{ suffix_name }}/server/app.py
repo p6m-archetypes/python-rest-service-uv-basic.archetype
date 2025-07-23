@@ -10,9 +10,10 @@ import logging
 from typing import Dict, Any, Optional
 
 import structlog
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from pydantic import ValidationError
 
 from .config.settings import get_settings
@@ -265,6 +266,31 @@ def _add_routes(app: FastAPI) -> None:
     async def health() -> Dict[str, str]:
         """Basic health check endpoint."""
         return {"status": "healthy"}
+    
+    @app.get("/health/live")
+    async def liveness_check() -> Dict[str, str]:
+        """Kubernetes liveness probe endpoint."""
+        return {"status": "UP"}
+
+    @app.get("/health/ready")
+    async def readiness_check() -> Dict[str, str]:
+        """Kubernetes readiness probe endpoint."""
+        return {"status": "UP"}
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        """Prometheus metrics endpoint."""
+        try:
+            # Generate Prometheus metrics
+            metrics_data = generate_latest()
+            
+            return Response(
+                content=metrics_data,
+                media_type=CONTENT_TYPE_LATEST
+            )
+        except Exception as e:
+            logger.error("Failed to generate metrics", error=str(e), exc_info=True)
+            raise HTTPException(status_code=500, detail="Failed to generate metrics")
     
     # Authentication endpoints
     @app.post("/auth/login")
