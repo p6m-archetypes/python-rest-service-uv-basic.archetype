@@ -364,21 +364,21 @@ test_service_connectivity() {
     cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
     # Test REST API root endpoint
-    if curl -s --connect-timeout 5 http://localhost:8000/ | grep -q "REST API" 2>/dev/null; then
+    if curl -s --connect-timeout 5 http://localhost:8080/ | grep -q "REST API" 2>/dev/null; then
         test_result 0 "REST API root endpoint accessible"
     else
         test_result 1 "REST API root endpoint not accessible"
     fi
     
     # Test REST API health endpoint
-    if curl -s --connect-timeout 5 http://localhost:8000/health | grep -q "healthy" 2>/dev/null; then
+    if curl -s --connect-timeout 5 http://localhost:8080/health | grep -q "healthy" 2>/dev/null; then
         test_result 0 "REST API health endpoint accessible"
     else
         test_result 1 "REST API health endpoint not accessible"
     fi
     
     # Test OpenAPI docs endpoint
-    if curl -s --connect-timeout 5 http://localhost:8000/docs >/dev/null 2>&1; then
+    if curl -s --connect-timeout 5 http://localhost:8080/docs >/dev/null 2>&1; then
         test_result 0 "OpenAPI docs endpoint accessible"
     else
         test_result 1 "OpenAPI docs endpoint not accessible"

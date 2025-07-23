@@ -37,7 +37,7 @@ class Settings(BaseSettings):
         description="Host to bind the API server"
     )
     api_port: int = Field(
-        default=8000,
+        default=8080,
         description="Port to bind the API server"
     )
     
@@ -106,7 +106,7 @@ class Settings(BaseSettings):
     )
     management_port: int = Field(
         default=8080,
-        description="Port for management endpoints"
+        description="Port for management endpoints (same as API for REST service)"
     )
     
     # Metrics Configuration
