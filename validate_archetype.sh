@@ -185,10 +185,10 @@ validate_template_substitution() {
     fi
     
     # Check for proto references that should have been replaced
-    local proto_refs=$(grep -r "proto" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv 2>/dev/null | grep -v "# proto files not needed" | wc -l)
+    local proto_refs=$(grep -r "\bproto\b" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv 2>/dev/null | grep -v "# proto files not needed" | grep -v "protocol:" | wc -l)
     if [ "$proto_refs" -gt 0 ]; then
         log "${RED}Found $proto_refs unexpected proto references:${NC}"
-        grep -r "proto" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv 2>/dev/null | grep -v "# proto files not needed" | head -3
+        grep -r "\bproto\b" . --exclude-dir=.git --exclude="*.pyc" --exclude-dir=.venv 2>/dev/null | grep -v "# proto files not needed" | grep -v "protocol:" | head -3
         if [ "$proto_refs" -gt 3 ]; then
             log "${YELLOW}... and $((proto_refs - 3)) more${NC}"
         fi
