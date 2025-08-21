@@ -378,7 +378,7 @@ test_service_connectivity() {
     fi
     
     # Test OpenAPI docs endpoint
-    if curl -s --connect-timeout 5 http://localhost:8080/docs >/dev/null 2>&1; then
+    if curl -s --connect-timeout 5 http://localhost:8000/docs >/dev/null 2>&1; then
         test_result 0 "OpenAPI docs endpoint accessible"
     else
         test_result 1 "OpenAPI docs endpoint not accessible"

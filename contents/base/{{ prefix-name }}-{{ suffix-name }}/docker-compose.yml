@@ -14,6 +14,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/{{ prefix_name }}_{{ suffix_name }}
       - LOGGING_LEVEL=INFO
       - LOGGING_FORMAT=json
+      - DEBUG=true
       - MANAGEMENT_ENABLED=true
       - METRICS_ENABLED=true
       - METRICS_PROMETHEUS_ENABLED=true
