@@ -21,13 +21,14 @@ jobs:
       - name: Login to Docker Repository
         uses: p6m-actions/docker-repository-login@v1
         with:
+          registry: ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}
           username: ${{'{'}}{ secrets.ARTIFACTORY_USERNAME }}
           password: ${{'{'}}{ secrets.ARTIFACTORY_IDENTITY_TOKEN }}
 
       - name: Get Image Digest
         id: get-digest
         run: |
-          DIGEST=$(docker manifest inspect {{ org-name }}-{{ solution-name }}-docker-local/applications/{{ prefix-name }}-{{ suffix-name }}-server:${{'{'}}{ inputs.tag }} | jq -r '.config.digest')
+          DIGEST=$(docker manifest inspect ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}/{{ org-name }}-{{ solution-name }}-docker-local/applications/{{ prefix-name }}-{{ suffix-name }}-server:${{'{'}}{ inputs.tag }} | jq -r '.config.digest')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Update Application Manifest

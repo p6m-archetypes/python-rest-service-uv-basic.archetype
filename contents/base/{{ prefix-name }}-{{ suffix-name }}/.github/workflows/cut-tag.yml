@@ -51,6 +51,7 @@ jobs:
       - name: Login to Docker Repository
         uses: p6m-actions/docker-repository-login@v1
         with:
+          registry: ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}
           username: ${{'{'}}{ secrets.ARTIFACTORY_USERNAME }}
           password: ${{'{'}}{ secrets.ARTIFACTORY_IDENTITY_TOKEN }}
 
