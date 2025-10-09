@@ -1,9 +1,9 @@
 ---
 description: "Python REST Service with FastAPI, UV, and Modern Tooling"
-authors: ["Generated via AI Assistant"]
+authors: ["Ybor Technology"]
 languages: ["Python"]
 frameworks: ["FastAPI", "SQLAlchemy", "Pydantic", "Pytest"]
-tags: ["REST", "API", "Microservice", "Python", "FastAPI", "Modern"]
+tags: ["REST", "Service", "Microservice", "API", "FastAPI"]
 
 requires:
-  archetect: "2.0.5" 
+  archetect: "2.0.5"
