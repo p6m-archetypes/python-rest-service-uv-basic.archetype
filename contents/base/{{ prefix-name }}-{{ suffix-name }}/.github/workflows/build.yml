@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and Publish Docker Image
         id: docker-publish
-        uses: p6m-actions/python-uv-docker-publish@YP6M-769-add-missing-run-action-to-python-uv-docker-publish
+        uses: p6m-actions/python-uv-docker-publish@v1
         with:
           image-name: {{ prefix-name }}-{{ suffix-name }}-server
           image-tag: ${{'{'}}{ github.sha }}
