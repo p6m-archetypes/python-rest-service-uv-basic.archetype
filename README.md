@@ -43,16 +43,7 @@ my-awesome-service/
 ### Generate a New Service
 
 ```bash
-# Generate a new service
 archetect render https://github.com/p6m-archetypes/python-rest-service-uv-basic.archetype.git#v1
-
-# Answer the prompts:
-# org-name: myorg
-# solution-name: myproject
-# prefix-name: awesome
-# suffix-name: service
-
-# Result: my-new-service/ directory with awesome-service REST API
 ```
 
 ### Development Workflow
