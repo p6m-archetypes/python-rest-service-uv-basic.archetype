@@ -44,7 +44,7 @@ my-awesome-service/
 
 ```bash
 # Generate a new service
-archetect render https://github.com/p6m-archetypes/python-rest-service-basic.archetype.git#v1
+archetect render https://github.com/p6m-archetypes/python-rest-service-uv-basic.archetype.git#v1
 
 # Answer the prompts:
 # org-name: myorg
