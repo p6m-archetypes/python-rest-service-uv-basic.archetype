@@ -61,10 +61,10 @@ docker-compose up -d
 ./scripts/run-tests.sh
 
 # 4. Access your service
-# - REST API: http://localhost:8080
-# - Health: http://localhost:8080/health
-# - OpenAPI Docs: http://localhost:8080/docs
-# - Metrics: http://localhost:8080/metrics
+# - REST API: http://localhost:8000
+# - Health: http://localhost:8000/health
+# - OpenAPI Docs: http://localhost:8000/docs
+# - Metrics: http://localhost:8000/metrics
 # - Grafana: http://localhost:3000 (admin/admin)
 # - Prometheus: http://localhost:9090
 ```
@@ -174,7 +174,7 @@ This archetype has been extensively updated and tested:
 9. **Build System** - Cleaned up package references and dependencies
 10. **Template Validation** - Created comprehensive validation tools
 11. **Test Structure Alignment** - Aligned test patterns with gRPC archetype for consistency
-12. **Port Configuration** - Standardized on port 8080 for REST services
+12. **Port Configuration** - Standardized on port 8000 for REST services
 
 ### Verification ✅
 
