@@ -1,1 +1,0 @@
-"""{{ PrefixName }} service package.""" 

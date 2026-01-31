@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Dict, Any, Optional
 
-from .config import get_database_config
+from .database_config import get_database_config
 
 logger = logging.getLogger(__name__)
 
