@@ -38,8 +38,8 @@ COPY {{ prefix-name }}-{{ suffix-name }}-server/src ./{{ prefix-name }}-{{ suffi
 # Copy scripts
 COPY scripts ./scripts
 
-# Install dependencies
-RUN uv sync --frozen --no-dev
+# Install dependencies (generates lockfile if not present)
+RUN uv sync --no-dev
 
 # Production stage
 FROM python:3.11-slim as production
@@ -74,7 +74,7 @@ EXPOSE 8000 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/health/live || exit 1
+    CMD curl -f http://localhost:8000/health/live || exit 1
 
 # Default command  
 CMD ["python", "-m", "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main"]
