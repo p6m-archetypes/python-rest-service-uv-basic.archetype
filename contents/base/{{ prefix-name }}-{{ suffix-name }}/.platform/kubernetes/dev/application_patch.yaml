@@ -3,4 +3,5 @@ kind: PlatformApplication
 metadata:
   name: {{ prefix-name }}-{{ suffix-name }}
 spec:
-  config: {}
+  config:
+    DEBUG: "true"
