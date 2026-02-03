@@ -7,8 +7,12 @@ requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.25.0",
     "pydantic>=2.5.0",
-    "structlog>=23.2.0"
+    "structlog>=23.2.0",
+    "{{ prefix-name }}-{{ suffix-name }}-api",
 ]
+
+[tool.uv.sources]
+{{ prefix-name }}-{{ suffix-name }}-api = { path = "../{{ prefix-name }}-{{ suffix-name }}-api", editable = true }
 
 [project.optional-dependencies]
 dev = [
