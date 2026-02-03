@@ -208,20 +208,21 @@ jobs:
       - name: Test database migrations
         run: |
           cd {{ prefix-name }}-{{ suffix-name }}-persistence
-          
+
           # Run all migrations
           uv run alembic upgrade head
           echo "✅ Migrations applied successfully"
-          
+
           # Verify schema
           uv run alembic current -v
-          
+
           # Test downgrade/upgrade cycle
           uv run alembic downgrade -1
           uv run alembic upgrade head
           echo "✅ Migration cycle completed"
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:testpass@localhost:5432/{{ prefix_name }}_{{ suffix_name }}_migration_test
+          PYTHONPATH: ${{'{'}}{github.workspace}}/{{ prefix-name }}-{{ suffix-name }}-persistence/src:${{'{'}}{github.workspace}}/{{ prefix-name }}-{{ suffix-name }}-core/src
 
   # REST client-server communication test
   rest-communication-test:
@@ -260,7 +261,8 @@ jobs:
           uv run alembic upgrade head
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:testpass@localhost:5432/{{ prefix_name }}_{{ suffix_name }}_rest_test
-      
+          PYTHONPATH: ${{'{'}}{github.workspace}}/{{ prefix-name }}-{{ suffix-name }}-persistence/src:${{'{'}}{github.workspace}}/{{ prefix-name }}-{{ suffix-name }}-core/src
+
       - name: Start REST server in background
         run: |
           cd {{ prefix-name }}-{{ suffix-name }}-server/src
